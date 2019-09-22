@@ -21,7 +21,7 @@ def load_image_as_numpy_array(image_bgr, cv_scale_factor=-1, convert_to_indensit
     return loaded_image_numpy_array
 
 
-def load_image_as_planar_point_cloud_open3d(image_bgr, width_by_mm, height_by_mm,
+def load_image_as_planar_point_cloud_open3d(image_bgr, width_by_m, height_by_m,
                                             cv_scale_factor=-1,
                                             convert_to_indensity=False, color_filter=[1.0, 1.0, 1.0]):
     img_numpy_array = load_image_as_numpy_array(image_bgr, cv_scale_factor=cv_scale_factor,
@@ -38,8 +38,8 @@ def load_image_as_planar_point_cloud_open3d(image_bgr, width_by_mm, height_by_mm
                       (-width_by_pixel / 2):(width_by_pixel - width_by_pixel / 2):1].reshape(2, -1).T
     points_position = numpy.c_[
         numpy.zeros(pixel_amount),
-        points_position[:, 1] * width_by_mm / width_by_pixel,
-        points_position[:, 0] * height_by_mm / height_by_pixel
+        points_position[:, 1] * width_by_m / width_by_pixel,
+        points_position[:, 0] * height_by_m / height_by_pixel
     ]
 
     points_normal = numpy.c_[
@@ -73,5 +73,5 @@ def load_image_as_planar_point_cloud_open3d(image_bgr, width_by_mm, height_by_mm
     return colored_point_cloud
 
 
-def evaluate_lapalacian(image_bgr):
+def evaluate_laplacian(image_bgr):
     return cv2.Laplacian(image_bgr, cv2.CV_64F).var()

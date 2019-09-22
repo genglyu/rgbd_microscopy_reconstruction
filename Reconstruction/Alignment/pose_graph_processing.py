@@ -14,19 +14,21 @@ from TileInfoDict import *
 from TransformationData import *
 from typing import Dict
 from PoseGraphG2o import *
+from local_transformation_estimation import *
 
 
 def make_pose_graph(pose_graph,
                     tile_info_dict,
                     trans_data_manager: TransformationDataPool,
                     config):
+    print("Start making pose graph")
     # Add all the nodes (real nodes and virtual sensor nodes)
     for tile_info_key in tile_info_dict:
         tile_info = tile_info_dict[tile_info_key]
         pose_graph.add_node(id_outside=tile_info.tile_index,
                             trans=tile_info.init_transform_matrix,
                             sensor_info=trans_info_sensor(config["sensor_info_weight"],
-                                                          numpy.asarray(config["sensor_info_g2o"])),
+                                                          numpy.asarray(config["sensor_info"])),
                             fixed=False)
     # Add read all the edges. Reading from a built TransformationDataPool
     for trans_estimation_result_key in trans_data_manager.trans_dict:
@@ -36,7 +38,7 @@ def make_pose_graph(pose_graph,
                                          trans=trans_estimation_result.trans,
                                          info=trans_info_matching(trans_estimation_result.conf,
                                                                   config["matching_info_weight"],
-                                                                  numpy.asarray(config["match_info_g2o"])))
+                                                                  numpy.asarray(config["match_info"])))
     # for tile_info_key in tile_info_dict:
     #     tile_info = tile_info_dict[tile_info_key]
     #     for neighbour_index in tile_info.confirmed_neighbour_list:

@@ -5,17 +5,14 @@
     "path_depth_dir": "depth/",
     "path_scene_dir": "scene/",
 
-    "path_local_transformation_data_pool" : "local_transform",
-    "local_trans_dict": "local_trans_dict.json",
+    "local_transformation_data_pool_name" : "local_trans_dict.json",
+    "tile_info_dict_name": "tile_info_dict.json",
 
-    "tile_info_dict_all": "tile_info_dict_all.json",
-    "tile_info_dict": "tile_info_dict.json",
-
-    "rough_pose_graph": "rough_pose_graph.g2o",
+    "rough_pose_graph_name": "rough_pose_graph.g2o",
     "optimized_pose_graph_name": "optimized_pose_graph.g2o",
 
     "potential_neighbour_searching_range": 0.01,
-    "normal_direction_tolerance_by_cos": 0.98,
+    "normal_direction_tolerance_by_cos": 0.8,
 
     "microscope_intrinsic":{
         "fx": 0.1,
@@ -28,67 +25,58 @@
         "depth_threshold": 0.5
     },
 
-    "size_by_mm": [5.2, 3.9],
-    "crop_width_by_pixel": 50,
-    "crop_height_by_pixel": 30,
+    "size_by_m": [0.01, 0.0075],
+    "crop_width_by_pixel": 10,
+    "crop_height_by_pixel": 10,
 
     "n_features": 500,
     "num_matches_thresh1": 6,
-    "cv_max_level": 3,
-    "conf_threshold": 0.5,
+    "cv_max_level": 1,
+    "conf_threshold": 0.3,
 
-    "scaling_tolerance": 0.05,
-    "rotation_tolerance": 0.1,
+    "scaling_tolerance": 0.1,
+    "rotation_tolerance": 0.3,
 
     "max_depth": 300.0,
     "voxel_size": 0.008125,
     "max_depth_diff": 0.01,
 
-    "max_iterations": 200,
-    "sensor_info_weight": 50,
+    "max_iterations": 400,
+    "sensor_info_weight": 1,
     "matching_info_weight": 100,
     "sensor_info": [
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0],
         [0, 0, 0, 2, 0, 0],
         [0, 0, 0, 0, 5, 0],
         [0, 0, 0, 0, 0, 5]],
     "match_info": [
-        [3, 0, 0, 0, 0, 0],
+        [10, 0, 0, 0, 0, 0],
         [0, 5, 0, 0, 0, 0],
         [0, 0, 5, 0, 0, 0],
         [0, 0, 0, 5, 0, 0],
-        [0, 0, 0, 0, 2, 0],
-        [0, 0, 0, 0, 0, 2]],
+        [0, 0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0, 1]],
 
     "visualization": [
         {
-            "key_frame_pcd_pose_is_enabled": true,
-            "regular_frame_pcd_pose_is_enabled": true,
+            "pcd_pose": true,
+            "wireframes_pose": false,
 
-            "key_frame_wireframes_pose_is_enabled": true,
-            "regular_frame_wireframes_pose_is_enabled": true,
+            "c_edgeset_pose": true,
+            "f_edgeset_pose": false,
 
-            "odometry_edgeset_pose_is_enabled": true,
-            "c_loop_edgeset_pose_is_enabled": true,
-            "f_loop_edgeset_pose_is_enabled": false,
+            "full_image_pcd_list_pose": true,
 
-            "full_image_pcd_pose_is_enabled": false,
+            "pcd_sensor": false,
+            "wireframes_sensor": false,
 
-            "key_frame_pcd_sensor_is_enabled": false,
-            "regular_frame_pcd_sensor_is_enabled": false,
+            "c_edgeset_sensor": false,
+            "f_edgeset_sensor": false,
+            "full_image_pcd_list_sensor": false,
 
-            "key_frame_wireframes_sensor_is_enabled": false,
-            "regular_frame_wireframes_sensor_is_enabled": false,
-
-            "odometry_edgeset_sensor_is_enabled": false,
-            "c_loop_edgeset_sensor_is_enabled": false,
-            "f_loop_edgeset_sensor_is_enabled": false,
-
-            "full_image_pcd_sensor_is_enabled": false,
-
-            "sensor_edgeset_is_enabled": false,
+            "sensor_edgeset": false,
 
             "image_pcd_downsample_factor": 0.1
         }
@@ -96,26 +84,20 @@
 
     "visualization_voxel_size": 0.008125,
 
-    "key_frame_pcd_pose_color": [1, 0, 0],
-    "regular_frame_pcd_pose_color": [0, 0, 0],
+    "pcd_pose_color": [1, 0, 0],
+    "wireframes_pose_color": [1, 0.7, 0.7],
 
-    "key_frame_wireframes_pose_color": [1, 0.7, 0.7],
-    "regular_frame_wireframes_pose_color": [0.8, 0.8, 0.8],
+    "c_edgeset_pose_color": [0.7, 0.7, 1],
+    "f_edgeset_pose_color": [0.8, 1, 0.8],
 
-    "odometry_edgeset_pose_color": [0.8, 0.6, 0.6],
-    "c_loop_edgeset_pose_color": [0.8, 0.8, 1],
-    "f_loop_edgeset_pose_color": [0.8, 1, 0.8],
     "full_image_pcd_pose_color_filter": [1, 1, 1],
 
-    "key_frame_pcd_sensor_color": [1, 0.7, 0.7],
-    "regular_frame_pcd_sensor_color": [0.8, 0.8, 0.8],
+    "pcd_sensor_color": [1, 0.7, 0.7],
+    "wireframes_sensor_color": [0.7, 0.7, 1],
 
-    "key_frame_wireframes_sensor_color": [0.7, 0.7, 1],
-    "regular_frame_wireframes_sensor_color": [0.7, 0.9, 0.7],
+    "c_edgeset_sensor_color": [0.7, 0.7, 1],
+    "f_edgeset_sensor_color": [0.8, 1, 0.8],
 
-    "odometry_edgeset_sensor_color": [0.8, 0.6, 0.6],
-    "c_loop_edgeset_sensor_color": [0.8, 0.8, 1],
-    "f_loop_edgeset_sensor_color": [0.8, 1, 0.8],
     "full_image_pcd_sensor_color_filter": [1, 1, 1],
 
     "sensor_edgeset_color": [0.9, 0.9, 0.9]

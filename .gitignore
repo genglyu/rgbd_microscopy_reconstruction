@@ -9,3 +9,4 @@ DebugTools/random_testing/
 *.testingjson
 *.png
 *.jpeg
+venv

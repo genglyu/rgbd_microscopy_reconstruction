@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("../Data_processing")
 sys.path.append("../../Utility")
 from image_processing import *
@@ -38,6 +39,8 @@ class MicroscopyReconstructionVisualizerOpen3d:
 
         self.sensor_edgeset = None
 
+
+
     def visualize_config(self):
         for view_setting in self.config["visualization"]:
             self.view(
@@ -74,15 +77,15 @@ class MicroscopyReconstructionVisualizerOpen3d:
         if pcd_pose:
             if self.pcd_pose is None:
                 self.pcd_pose = make_point_cloud(points=self.pose_pan["points"],
-                                                 color=self.config["key_frame_pcd_pose_color"],
-                                                           normals=self.pose__pan["normals"])
+                                                 color=self.config["pcd_pose_color"],
+                                                 normals=self.pose_pan["normals"])
             draw_list += [self.pcd_pose]
 
         if wireframes_pose:
             if self.wireframes_pose is None:
                 self.wireframes_pose = \
                     make_wireframes_pose(tile_info_dict=self.tile_info_dict,
-                                         color=self.config["key_frame_wireframes_pose_color"])
+                                         color=self.config["wireframes_pose_color"])
             draw_list += self.wireframes_pose
 
         if c_edgeset_pose:
@@ -96,12 +99,14 @@ class MicroscopyReconstructionVisualizerOpen3d:
                 self.f_edgeset_pose = make_edge_set(points=self.pose_pan["points"],
                                                     edges=self.f_edges,
                                                     color=self.config["f_edgeset_pose_color"])
-            draw_list += [self.c_edgeset_pose]
+            draw_list += [self.f_edgeset_pose]
 
         if full_image_pcd_list_pose:
             if self.full_image_pcd_list_pose is None:
                 self.full_image_pcd_list_pose = \
                     make_full_image_pcd_list_pose(tile_info_dict=self.tile_info_dict,
+                                                  color_directory_path=join(self.config["path_data"],
+                                                                            self.config["path_image_dir"]),
                                                   downsample_factor=image_pcd_downsample_factor,
                                                   color_filter=self.config["full_image_pcd_pose_color_filter"]
                                                   )
@@ -110,37 +115,39 @@ class MicroscopyReconstructionVisualizerOpen3d:
         if pcd_sensor:
             if self.pcd_sensor is None:
                 self.pcd_sensor = make_point_cloud(points=self.pose_pan["points"],
-                                                 color=self.config["key_frame_pcd_pose_color"],
-                                                           normals=self.pose_pan["normals"])
+                                                   color=self.config["pcd_sensor_color"],
+                                                   normals=self.pose_pan["normals"])
             draw_list += [self.pcd_sensor]
 
         if wireframes_sensor:
             if self.wireframes_sensor is None:
                 self.wireframes_sensor = \
                     make_wireframes_sensor(tile_info_dict=self.tile_info_dict,
-                                         color=self.config["key_frame_wireframes_sensor_color"])
+                                           color=self.config["wireframes_sensor_color"])
             draw_list += self.wireframes_sensor
 
         if c_edgeset_sensor:
             if self.c_edgeset_sensor is None:
                 self.c_edgeset_sensor = make_edge_set(points=self.sensor_pan["points"],
-                                                    edges=self.c_edges,
-                                                    color=self.config["c_edgeset_sensor_color"])
+                                                      edges=self.c_edges,
+                                                      color=self.config["c_edgeset_sensor_color"])
             draw_list += [self.c_edgeset_sensor]
         if f_edgeset_sensor:
             if self.f_edgeset_sensor is None:
                 self.f_edgeset_sensor = make_edge_set(points=self.sensor_pan["points"],
-                                                    edges=self.f_edges,
-                                                    color=self.config["f_edgeset_sensor_color"])
-            draw_list += [self.c_edgeset_sensor]
+                                                      edges=self.f_edges,
+                                                      color=self.config["f_edgeset_sensor_color"])
+            draw_list += [self.f_edgeset_sensor]
 
         if full_image_pcd_list_sensor:
             if self.full_image_pcd_list_sensor is None:
                 self.full_image_pcd_list_sensor = \
                     make_full_image_pcd_list_sensor(tile_info_dict=self.tile_info_dict,
-                                                  downsample_factor=image_pcd_downsample_factor,
-                                                  color_filter=self.config["full_image_pcd_sensor_color_filter"]
-                                                  )
+                                                    downsample_factor=image_pcd_downsample_factor,
+                                                    color_directory_path=join(self.config["path_data"],
+                                                                              self.config["path_image_dir"]),
+                                                    color_filter=self.config["full_image_pcd_sensor_color_filter"]
+                                                    )
             draw_list += self.full_image_pcd_list_sensor
 
         if sensor_edgeset:

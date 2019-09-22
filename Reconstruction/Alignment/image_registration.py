@@ -33,10 +33,10 @@ def update_local_trans_data_multiprocessing(transformation_data:TransformationDa
         delayed(trans_estimation_pure)(s_id=s_id, t_id=t_id,
                                        s_img_path=join(config["path_data"],
                                                        config["path_image_dir"],
-                                                       tile_info_dict[s_id].file_name, ".png"),
+                                                       tile_info_dict[s_id].file_name) + ".png",
                                        t_img_path=join(config["path_data"],
                                                        config["path_image_dir"],
-                                                       tile_info_dict[t_id].file_name, ".png"),
+                                                       tile_info_dict[t_id].file_name) + ".png",
                                        width_by_pixel_s=tile_info_dict[s_id].width_by_pixel,
                                        height_by_pixel_s=tile_info_dict[s_id].height_by_pixel,
                                        width_by_pixel_t=tile_info_dict[t_id].width_by_pixel,
@@ -62,5 +62,11 @@ def update_local_trans_data_multiprocessing(transformation_data:TransformationDa
     return transformation_data
 
 
-def update_trans_info_dict_confirmed_neighbours():
-    return True
+def update_trans_info_dict_confirmed_neighbours(transformation_data:TransformationDataPool, tile_info_dict):
+    for (s, t) in transformation_data.trans_dict:
+        # print("s: %d, t: %d" % (s, t))
+        # print(transformation_data.trans_dict[(s, t)].success)
+        # print(t not in tile_info_dict[s].confirmed_neighbour_list)
+        if transformation_data.trans_dict[(s, t)].success and (t not in tile_info_dict[s].confirmed_neighbour_list):
+            tile_info_dict[s].confirmed_neighbour_list.append(t)
+    return tile_info_dict

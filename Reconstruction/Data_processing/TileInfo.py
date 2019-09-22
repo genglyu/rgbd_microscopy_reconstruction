@@ -26,8 +26,8 @@ class TileInfo:
 
         self.width_by_pixel = 640
         self.height_by_pixel = 480
-        self.width_by_m = 0.0064
-        self.height_by_m = 0.0048
+        self.width_by_m = 0.010
+        self.height_by_m = 0.0075
 
         # self.laplacian = 0.0
         self.has_april_tag = False
@@ -41,7 +41,7 @@ class TileInfo:
 def load_robotic_pose_info(robotic_pose_info_path):
     if os.path.isfile(robotic_pose_info_path):
         robotic_pose_data = json.load(open(robotic_pose_info_path, "r"))
-        trans = rob_pose_to_trans(robotic_pose_data)
+        trans = rob_pose_to_img_trans(robotic_pose_data)
 
         file_name, extension = os.path.splitext(os.path.basename(robotic_pose_info_path))
         tile_index = int(file_name[len("tile_"):])

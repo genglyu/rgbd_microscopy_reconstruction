@@ -5,7 +5,7 @@ import sys
 sys.path.append("../../Utility")
 sys.path.append("../Alignment")
 from file_managing import *
-from local_transformation_estimation import *
+# from local_transformation_estimation import *
 
 
 class LocalTransformationEstimationResult:
@@ -28,7 +28,7 @@ class TransformationDataPool:
             path = join(self.config["path_data"], self.config["local_trans_dict_g2o"])
         data_to_save = {}
         for (s, t) in self.trans_dict:
-            if data_to_save[s] is None:
+            if s not in data_to_save:
                 data_to_save[s] = {}
             data_to_save[s][t] = {"s": self.trans_dict[(s, t)].s,
                                   "t": self.trans_dict[(s, t)].t,
@@ -59,14 +59,7 @@ class TransformationDataPool:
         try:
             local_trans_estimation = self.trans_dict[(s_id, t_id)]
         except:
-            try:
-                s_info = self.tile_info_dict[s_id]
-                t_info = self.tile_info_dict[t_id]
-                success, conf, trans = trans_estimation_tile(s_info, t_info, self.config)
-                self.update_trans(s_id, t_id, success, conf, trans)
-                local_trans_estimation = self.trans_dict[(s_id, t_id)]
-            except:
-                local_trans_estimation = LocalTransformationEstimationResult(s_id, t_id, False, 0, numpy.identity(4))
+            local_trans_estimation = LocalTransformationEstimationResult(s_id, t_id, False, 0, numpy.identity(4))
         return local_trans_estimation
 
     def get_trans_extend(self, s_id, t_id):

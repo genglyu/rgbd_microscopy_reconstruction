@@ -5,11 +5,12 @@ import transforms3d
 from scipy.spatial.transform import Rotation
 import sys
 
+from TransformationData import LocalTransformationEstimationResult
+
 sys.path.append("../../Utility")
 sys.path.append("../Alignment")
 sys.path.append("../Data_processing")
 from TileInfo import *
-from TransformationData import *
 from file_managing import *
 
 
@@ -27,14 +28,26 @@ def planar_transformation_cv(s_img, t_img, crop_w=0, crop_h=0,
     (t_h, t_w, t_c) = t_img.shape
     s_img_crop = s_img[crop_h:s_h - crop_h, crop_w:s_w - crop_w]
     t_img_crop = t_img[crop_h:t_h - crop_h, crop_w:t_w - crop_w]
-    orb_finder = cv2.ORB_create(scaleFactor=1.2, nlevels=4, edgeThreshold=31,
-                                firstLevel=0, WTA_K=2, scoreType=cv2.ORB_HARRIS_SCORE,
-                                nfeatures=nfeatures, patchSize=31)
+    # orb_finder = cv2.ORB_create(scaleFactor=1.2, nlevels=4, edgeThreshold=31,
+    #                             firstLevel=0, WTA_K=2, scoreType=cv2.ORB_HARRIS_SCORE,
+    #                             nfeatures=nfeatures, patchSize=31)
+
+    sift_finder = cv2.xfeatures2d.SIFT_create(nfeatures=400,
+                                              nOctaveLayers=3,
+                                              contrastThreshold=0.001,
+                                              edgeThreshold=100,
+                                              sigma=1.6)
+
     matcher = cv2.detail_AffineBestOf2NearestMatcher(full_affine=False, try_use_gpu=True,
                                                      match_conf=match_conf,
                                                      num_matches_thresh1=num_matches_thresh1)
-    source_feature = cv2.detail.computeImageFeatures2(featuresFinder=orb_finder, image=s_img_crop)
-    target_feature = cv2.detail.computeImageFeatures2(featuresFinder=orb_finder, image=t_img_crop)
+
+    # source_feature = cv2.detail.computeImageFeatures2(featuresFinder=orb_finder, image=s_img_crop)
+    # target_feature = cv2.detail.computeImageFeatures2(featuresFinder=orb_finder, image=t_img_crop)
+    source_feature = cv2.detail.computeImageFeatures2(featuresFinder=sift_finder, image=s_img_crop)
+    target_feature = cv2.detail.computeImageFeatures2(featuresFinder=sift_finder, image=t_img_crop)
+
+
     # print(source_feature)
     # print(target_feature)
     matching_result = matcher.apply(source_feature, target_feature)
@@ -150,6 +163,7 @@ def trans_local_check(trans_local, s_init_trans, t_init_trans, scaling_tolerance
 def trans_info_matching(match_conf, weight=1, match_info=numpy.identity(4)):
     # The order of the 6x6 matrix should be: x, y, z, rotation_x, rotation_y, rotation_z for g2o.
     info_matrix = weight * match_conf * match_info
+    # info_matrix = weight * match_info
     return info_matrix
 
 
@@ -235,10 +249,10 @@ def trans_estimation_tile(tile_info_s: TileInfo, tile_info_t: TileInfo, config):
     return trans_estimation_pure(s_id=tile_info_s.tile_index, t_id=tile_info_t.tile_index,
                                  s_img_path=join(config["path_data"],
                                                  config["path_image_dir"],
-                                                 tile_info_s.file_name, ".png"),
+                                                 tile_info_s.file_name) + ".png",
                                  t_img_path=join(config["path_data"],
                                                  config["path_image_dir"],
-                                                 tile_info_t.file_name, ".png"),
+                                                 tile_info_t.file_name) + ".png",
                                  width_by_pixel_s=tile_info_s.width_by_pixel,
                                  height_by_pixel_s=tile_info_s.height_by_pixel,
                                  width_by_pixel_t=tile_info_t.width_by_pixel,

@@ -8,11 +8,16 @@ import sys
 sys.path.append("./Utility")
 sys.path.append("./Alignment")
 sys.path.append("./Data_processing")
+sys.path.append("./Visualization")
 
 from file_managing import *
 from copy import deepcopy
 import TileInfoDict
 import TransformationData
+import PoseGraphG2o
+import VisualizerOpen3d
+import pose_graph_processing
+
 
 
 if __name__ == "__main__":
@@ -83,52 +88,64 @@ if __name__ == "__main__":
 
     # Registering ================================================================================
     if args.register:
+        import image_registration
         if tile_info_dict is not None:
             trans_data_manager = TransformationData.TransformationDataPool(tile_info_dict, config)
             try:
-                trans_data_manager.read(join(config["path_data"], config["local_trans_dict_name"]))
+                trans_data_manager.read(join(config["path_data"], config["local_transformation_data_pool_name"]))
             except:
                 print("No trans_data available in default path. Start updating")
-                trans_data_manager.update_local_trans_data_multiprocessing()
-                trans_data_manager.save(join(config["path_data"], config["local_trans_dict_name"]))
-                tile_info_dict = trans_data_manager.update_tile_info_dict_confirmed_neighbour()
+                image_registration.update_local_trans_data_multiprocessing(transformation_data=trans_data_manager,
+                                                                           tile_info_dict=tile_info_dict,
+                                                                           config=config)
+                trans_data_manager.save(join(config["path_data"], config["local_transformation_data_pool_name"]))
+            tile_info_dict = image_registration.update_trans_info_dict_confirmed_neighbours(
+                transformation_data=trans_data_manager, tile_info_dict=tile_info_dict)
+            TileInfoDict.save_tile_info_dict(join(config["path_data"], config["tile_info_dict_name"]),
+                                             tile_info_dict)
+
         else:
             print("No tile_info_dict available in RAM")
             sys.exit()
 
     # Make pose graph ============================================================================
-    if args.make_pose_graph_g2o:
-        pose_graph_g2o = pose_graph_robotic_g2o.PoseGraphOptimizerRoboticG2o()
+    if args.make_pose_graph:
+        pose_graph = PoseGraphG2o.PoseGraphOptimizerRoboticG2o()
+        # pose_graph = pose_graph_processing.make_pose_graph(pose_graph, tile_info_dict, trans_data_manager, config)
         try:
-            pose_graph_g2o.make_pose_graph(tile_info_dict, trans_data_manager, config)
-            pose_graph_g2o.save(join(config["path_data"], config["rough_g2o_pg_name"]))
+            print("Trying to make pose graph")
+            # print(tile_info_dict)
+            # print(trans_data_manager)
+            pose_graph_processing.make_pose_graph(pose_graph, tile_info_dict, trans_data_manager, config)
+            print("Pose graph made")
+            pose_graph.save(join(config["path_data"], config["rough_pose_graph_name"]))
         except:
             print("No tile_info_dict / trans_data_manager available in RAM or at default path")
             sys.exit()
             # tile_info_dict = pose_graph_g2o.update_tile_info_dict(tile_info_dict)
 
-    if args.optimize_g2o:
+    if args.optimize:
         print("Start optimizing the pose graph =============================================")
         try:
-            pose_graph_robotic_g2o.optimize(config["max_iterations"])
+            pose_graph.optimize(config["max_iterations"])
         except:
             print("No rough_pose_graph available in RAM. Try reading from default path")
-            rough_posegraph_path = join(config["path_data"], config["rough_g2o_pg_name"])
+            rough_posegraph_path = join(config["path_data"], config["rough_pose_graph_name"])
             if os.path.isfile(rough_posegraph_path):
-                pose_graph_g2o = pose_graph_robotic_g2o.PoseGraphOptimizerRoboticG2o()
-                pose_graph_g2o.load(rough_posegraph_path)
-                pose_graph_g2o.optimize(config["max_iterations"])
+                pose_graph = pose_graph.PoseGraphOptimizerRoboticG2o()
+                pose_graph.load(rough_posegraph_path)
+                pose_graph.optimize(config["max_iterations"])
             else:
                 print("No rough_pose_graph available at default path")
                 sys.exit()
 
-        pose_graph_g2o.save(join(config["path_data"], config["optimized_g2o_pg_name"]))
+        pose_graph.save(join(config["path_data"], config["optimized_pose_graph_name"]))
 
-        tile_info_dict = pose_graph_g2o.update_tile_info_dict(tile_info_dict)
-        save_tile_info_dict(join(config["path_data"], config["tile_info_dict_name"]), tile_info_dict)
+        tile_info_dict = pose_graph_processing.update_tile_info_dict(pose_graph, tile_info_dict)
+        TileInfoDict.save_tile_info_dict(join(config["path_data"], config["tile_info_dict_name"]), tile_info_dict)
 
     # Visualize ==================================================================================
-    if args.vpg_raw:
-        viewer = visualization_robotic.MicroscopyReconstructionVisualizerOpen3d(tile_info_dict, config)
+    if args.visualization:
+        viewer = VisualizerOpen3d.MicroscopyReconstructionVisualizerOpen3d(tile_info_dict, config)
         viewer.visualize_config()
 
