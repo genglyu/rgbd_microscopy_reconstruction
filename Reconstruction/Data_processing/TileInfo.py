@@ -88,6 +88,7 @@ def tile_info_from_json_format(tile_info_json_format):
 
     new_tile_info.potential_neighbour_list = tile_info_json_format["potential_neighbour_list"]
     new_tile_info.confirmed_neighbour_list = tile_info_json_format["confirmed_neighbour_list"]
+    return new_tile_info
 
 
 def tile_info_to_json_format(tile_info: TileInfo):

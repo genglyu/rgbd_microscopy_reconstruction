@@ -48,10 +48,10 @@ trans_camera_to_rob_matrix = numpy.linalg.inv(trans_rob_to_camera_matrix)
 
 
 # get the RGBD camera pose
-trans_to_rgbd_camera_matrix = numpy.array([[0, 1, 0, 0],
-                                           [0, 0, 1, 0],
-                                           [1, 0, 0, 0],
-                                           [0, 0, 0, 1]])
+# trans_to_rgbd_camera_matrix = numpy.array([[0, 1, 0, 0],
+#                                            [0, 0, 1, 0],
+#                                            [1, 0, 0, 0],
+#                                            [0, 0, 0, 1]])
 
 
 def rob_pose_to_img_trans(rob_pose):

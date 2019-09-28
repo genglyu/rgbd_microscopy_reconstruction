@@ -67,6 +67,16 @@ def update_trans_info_dict_confirmed_neighbours(transformation_data:Transformati
         # print("s: %d, t: %d" % (s, t))
         # print(transformation_data.trans_dict[(s, t)].success)
         # print(t not in tile_info_dict[s].confirmed_neighbour_list)
-        if transformation_data.trans_dict[(s, t)].success and (t not in tile_info_dict[s].confirmed_neighbour_list):
-            tile_info_dict[s].confirmed_neighbour_list.append(t)
+        # since the later "make_pose_graph" read edges from LocalTransformationDataPool, so the confirmed neighbour
+        # list can be all the tiles actually related rather than just the ones s < t.
+        if transformation_data.trans_dict[(s, t)].success:
+            if t not in tile_info_dict[s].confirmed_neighbour_list:
+                tile_info_dict[s].confirmed_neighbour_list.append(t)
+            if s not in tile_info_dict[t].confirmed_neighbour_list:
+                tile_info_dict[t].confirmed_neighbour_list.append(s)
+        else:
+            while t in tile_info_dict[s].confirmed_neighbour_list:
+                tile_info_dict[s].confirmed_neighbour_list.remove(t)
+            while s in tile_info_dict[t].confirmed_neighbour_list:
+                tile_info_dict[t].confirmed_neighbour_list.remove(s)
     return tile_info_dict

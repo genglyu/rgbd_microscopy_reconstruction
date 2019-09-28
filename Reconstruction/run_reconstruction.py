@@ -9,6 +9,7 @@ sys.path.append("./Utility")
 sys.path.append("./Alignment")
 sys.path.append("./Data_processing")
 sys.path.append("./Visualization")
+sys.path.append("./Integration")
 
 from file_managing import *
 from copy import deepcopy
@@ -51,6 +52,13 @@ if __name__ == "__main__":
                         help="Optimize g2o pose graph, update the pose of each tile in tile_info_dict and save the "
                              "results.")
 
+    parser.add_argument('--generate_depth_map', '-gdm',
+                        action="store_true",
+                        help="Make curved depth map for all tiles.")
+    parser.add_argument('--integrate', '-i',
+                        action="store_true",
+                        help="Integrate images into a mesh.")
+
     # Visualize pose graph. Actually, raw and rough option should have same results.
     parser.add_argument('-visualization', '-v',
                         action="store_true",
@@ -63,6 +71,8 @@ if __name__ == "__main__":
             and not args.register\
             and not args.make_pose_graph \
             and not args.optimize \
+            and not args.generate_depth_map \
+            and not args.integrate \
             and not args.visualization:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -132,7 +142,7 @@ if __name__ == "__main__":
             print("No rough_pose_graph available in RAM. Try reading from default path")
             rough_posegraph_path = join(config["path_data"], config["rough_pose_graph_name"])
             if os.path.isfile(rough_posegraph_path):
-                pose_graph = pose_graph.PoseGraphOptimizerRoboticG2o()
+                pose_graph = PoseGraphG2o.PoseGraphOptimizerRoboticG2o()
                 pose_graph.load(rough_posegraph_path)
                 pose_graph.optimize(config["max_iterations"])
             else:
@@ -144,8 +154,18 @@ if __name__ == "__main__":
         tile_info_dict = pose_graph_processing.update_tile_info_dict(pose_graph, tile_info_dict)
         TileInfoDict.save_tile_info_dict(join(config["path_data"], config["tile_info_dict_name"]), tile_info_dict)
 
+    # generate_depth_map ==================================================================================
+    if args.generate_depth_map:
+        import integrate_rgbd
+        tile_info_dict = integrate_rgbd.generate_depth_map_multiprocessing(tile_info_dict=tile_info_dict, config=config)
+        TileInfoDict.save_tile_info_dict(join(config["path_data"], config["tile_info_dict_name"]), tile_info_dict)
+
+    # Integrate ==================================================================================
+    if args.integrate:
+        import integrate_rgbd
+        integrate_rgbd.integrate_object(tile_info_dict=tile_info_dict, config=config, save_mesh=True)
+
     # Visualize ==================================================================================
     if args.visualization:
         viewer = VisualizerOpen3d.MicroscopyReconstructionVisualizerOpen3d(tile_info_dict, config)
         viewer.visualize_config()
-

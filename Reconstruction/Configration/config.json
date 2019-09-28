@@ -15,10 +15,7 @@
     "normal_direction_tolerance_by_cos": 0.8,
 
     "microscope_intrinsic":{
-        "fx": 0.1,
-        "fy": 0.1,
-        "cx": 0.004,
-        "cy": 0.003,
+        "focal_distance": 0.1,
         "width_by_pixel": 640,
         "height_by_pixel": 480,
         "depth_scaling": 200000,
@@ -67,7 +64,7 @@
             "c_edgeset_pose": true,
             "f_edgeset_pose": false,
 
-            "full_image_pcd_list_pose": true,
+            "full_image_pcd_list_pose": false,
 
             "pcd_sensor": false,
             "wireframes_sensor": false,

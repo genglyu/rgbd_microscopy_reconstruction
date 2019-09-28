@@ -81,8 +81,8 @@ class RoboticVisualizerOpen3d:
         self.tile_width = robotic_config["tile_width"]
         self.tile_height = robotic_config["tile_height"]
 
-        self.original_pcd = None
-        self.original_wire_frame = None
+        # self.original_pcd = None
+        # self.original_wire_frame = None
         self.aligned_pcd = None
         self.aligned_wire_frame = None
         self.interpolated_pcd = None
@@ -95,20 +95,21 @@ class RoboticVisualizerOpen3d:
 
     def view_via_robotic_config(self):
         for view_setting in self.robotic_config["visualization"]:
-            self.view(original_pcd=view_setting["original_pcd"],
-                      original_wire_frame=view_setting["original_wire_frame"],
-                      aligned_pcd=view_setting["aligned_pcd"],
-                      aligned_wire_frame=view_setting["aligned_wire_frame"],
-                      interpolated_pcd=view_setting["interpolated_pcd"],
-                      interpolated_wire_frame=view_setting["interpolated_wire_frame"],
-                      interpolated_cropped_pcd=view_setting["interpolated_cropped_pcd"],
-                      interpolated_cropped_wire_frame=view_setting["interpolated_cropped_wire_frame"],
-                      navigated_route=view_setting["navigated_route"])
+            self.view(
+                # original_pcd=view_setting["original_pcd"],
+                # original_wire_frame=view_setting["original_wire_frame"],
+                aligned_pcd=view_setting["aligned_pcd"],
+                aligned_wire_frame=view_setting["aligned_wire_frame"],
+                interpolated_pcd=view_setting["interpolated_pcd"],
+                interpolated_wire_frame=view_setting["interpolated_wire_frame"],
+                interpolated_cropped_pcd=view_setting["interpolated_cropped_pcd"],
+                interpolated_cropped_wire_frame=view_setting["interpolated_cropped_wire_frame"],
+                navigated_route=view_setting["navigated_route"])
 
 
     def view(self,
-             original_pcd=False,
-             original_wire_frame=False,
+             # original_pcd=False,
+             # original_wire_frame=False,
              aligned_pcd=False,
              aligned_wire_frame=False,
              interpolated_pcd=False,
@@ -117,22 +118,22 @@ class RoboticVisualizerOpen3d:
              interpolated_cropped_wire_frame=False,
              navigated_route=False):
         draw_list =[]
-        if original_pcd:
-            if self.original_pcd is None:
-                original_trans_list = read_trans_list(join(self.robotic_config["path_data"],
-                                                           self.robotic_config["robotic_reconstruction_workspace"],
-                                                           self.robotic_config["robotic_reconstruction_trans_list_all"])
-                                                      )
-                self.original_pcd = make_pcd_from_trans_list(original_trans_list, color=[0, 0, 0])
-            draw_list.append(self.original_pcd)
-        if original_wire_frame:
-            if self.original_wire_frame is None:
-                original_trans_list = read_trans_list(join(self.robotic_config["path_data"],
-                                                           self.robotic_config["robotic_reconstruction_workspace"],
-                                                           self.robotic_config["robotic_reconstruction_trans_list_all"])
-                                                      )
-                self.original_wire_frame = make_tile_frame_list_from_trans_list(original_trans_list)
-            draw_list += self.original_wire_frame
+        # if original_pcd:
+        #     if self.original_pcd is None:
+        #         original_trans_list = read_trans_list(join(self.robotic_config["path_data"],
+        #                                                    self.robotic_config["robotic_reconstruction_workspace"],
+        #                                                    self.robotic_config["robotic_reconstruction_trans_list_all"])
+        #                                               )
+        #         self.original_pcd = make_pcd_from_trans_list(original_trans_list, color=[0, 0, 0])
+        #     draw_list.append(self.original_pcd)
+        # if original_wire_frame:
+        #     if self.original_wire_frame is None:
+        #         original_trans_list = read_trans_list(join(self.robotic_config["path_data"],
+        #                                                    self.robotic_config["robotic_reconstruction_workspace"],
+        #                                                    self.robotic_config["robotic_reconstruction_trans_list_all"])
+        #                                               )
+        #         self.original_wire_frame = make_tile_frame_list_from_trans_list(original_trans_list)
+        #     draw_list += self.original_wire_frame
         if aligned_pcd:
             if self.aligned_pcd is None:
                 aligned_trans_list = read_trans_list(
@@ -169,7 +170,9 @@ class RoboticVisualizerOpen3d:
                          self.robotic_config["robotic_reconstruction_workspace"],
                          self.robotic_config["robotic_reconstruction_trans_interpolated"])
                 )
-                self.interpolated_wire_frame = make_tile_frame_list_from_trans_list(interpolated_trans_list)
+                self.interpolated_wire_frame = make_tile_frame_list_from_trans_list(
+                    interpolated_trans_list,
+                    width=0.005, height=0.00375, color=[0, 0, 0])
             draw_list += self.interpolated_wire_frame
         if interpolated_cropped_pcd:
             if self.interpolated_cropped_pcd is None:

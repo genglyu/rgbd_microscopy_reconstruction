@@ -28,6 +28,7 @@ class MicroscopyReconstructionVisualizerOpen3d:
         self.f_edgeset_pose = None
 
         self.full_image_pcd_list_pose = None
+        self.cropped_image_pcd_list_pose = None
         # ==================================================
         self.pcd_sensor = None
         self.wireframes_sensor = None
@@ -39,8 +40,6 @@ class MicroscopyReconstructionVisualizerOpen3d:
 
         self.sensor_edgeset = None
 
-
-
     def visualize_config(self):
         for view_setting in self.config["visualization"]:
             self.view(
@@ -49,6 +48,7 @@ class MicroscopyReconstructionVisualizerOpen3d:
                 c_edgeset_pose=view_setting["c_edgeset_pose"],
                 f_edgeset_pose=view_setting["f_edgeset_pose"],
                 full_image_pcd_list_pose=view_setting["full_image_pcd_list_pose"],
+                cropped_image_pcd_list_pose=view_setting["cropped_image_pcd_list_pose"],
                 pcd_sensor=view_setting["pcd_sensor"],
                 wireframes_sensor=view_setting["wireframes_sensor"],
                 c_edgeset_sensor=view_setting["c_edgeset_sensor"],
@@ -63,6 +63,7 @@ class MicroscopyReconstructionVisualizerOpen3d:
              c_edgeset_pose=False,
              f_edgeset_pose=False,
              full_image_pcd_list_pose=False,
+             cropped_image_pcd_list_pose=False,
 
              pcd_sensor=False,
              wireframes_sensor=False,
@@ -112,11 +113,19 @@ class MicroscopyReconstructionVisualizerOpen3d:
                                                   )
             draw_list += self.full_image_pcd_list_pose
 
+        if cropped_image_pcd_list_pose:
+            if self.cropped_image_pcd_list_pose is None:
+                self.cropped_image_pcd_list_pose = \
+                    make_cropped_image_pcd_list_pose(tile_info_dict=self.tile_info_dict,
+                                                     img_directory_path=join(self.config["path_data"],
+                                                                             self.config["path_image_dir"]))
+            draw_list += self.cropped_image_pcd_list_pose
+
         if pcd_sensor:
             if self.pcd_sensor is None:
-                self.pcd_sensor = make_point_cloud(points=self.pose_pan["points"],
+                self.pcd_sensor = make_point_cloud(points=self.sensor_pan["points"],
                                                    color=self.config["pcd_sensor_color"],
-                                                   normals=self.pose_pan["normals"])
+                                                   normals=self.sensor_pan["normals"])
             draw_list += [self.pcd_sensor]
 
         if wireframes_sensor:

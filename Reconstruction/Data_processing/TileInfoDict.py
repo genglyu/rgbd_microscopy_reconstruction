@@ -7,18 +7,21 @@ sys.path.append("../Utility")
 from file_managing import *
 
 
-def tile_info_dict_generate_kd_tree(tile_info_dict):
+def tile_info_dict_generate_kd_tree(tile_info_dict, use_refined_data=False):
     tile_positions = []
     tile_index_list = []
     for tile_info_index in tile_info_dict:
         tile_info = tile_info_dict[tile_info_index]
-        tile_positions.append(tile_info.position)
+        if use_refined_data:
+            tile_positions.append(numpy.dot(tile_info.pose_matrix, numpy.array([0, 0, 0, 1]).T).T[0:3])
+        else:
+            tile_positions.append(tile_info.position)
         tile_index_list.append(tile_info_index)
     tile_info_point_cloud = PointCloud()
     tile_info_point_cloud.points = Vector3dVector(tile_positions)
     tile_tree = KDTreeFlann(tile_info_point_cloud)  # Building KDtree to help searching.
 
-    return tile_tree, tile_index_list
+    return tile_tree, tile_index_list, tile_positions
 
 
 def make_info_dict(config):
@@ -44,11 +47,11 @@ def make_info_dict(config):
         [tile_info.width_by_pixel, tile_info.height_by_pixel] = [w, h]
         [tile_info.width_by_m, tile_info.height_by_m] = config["size_by_m"]
         # tile_info.laplacian = cv2.Laplacian(image, cv2.CV_64F).var()
-        tile_info.pose_matrix = tile_info.init_transform_matrix
+        tile_info.pose_matrix = numpy.identity(4)
         tile_info_dict[tile_info.tile_index] = tile_info
 
     # Make kd_tree ====================================================================
-    tile_tree, tile_index_list = tile_info_dict_generate_kd_tree(tile_info_dict)
+    tile_tree, tile_index_list, tile_positions = tile_info_dict_generate_kd_tree(tile_info_dict)
     # Generate potential neighbours ===================================================
     for k, tile_info_key in enumerate(tile_info_dict):
         tile_info = tile_info_dict[tile_info_key]

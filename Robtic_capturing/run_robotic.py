@@ -103,7 +103,7 @@ if __name__ == "__main__":
         navigator = navigation.NavigationGraph()
 
         # points = trans_list_to_points(trans_list_interpolated)
-        navigator.load_trans_list(trans_list, 0.03)
+        navigator.load_trans_list(trans_list, 0.003)
         # order = navigator.dfs()
         # order = navigator.bfs(2)
 

@@ -8,6 +8,7 @@ import sys
 sys.path.append("../Utility")
 
 
+
 def load_image_as_numpy_array(image_bgr, cv_scale_factor=-1, convert_to_indensity=False):
     loaded_image_numpy_array = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)  # OpenCV use BGR color.
 

@@ -58,8 +58,14 @@ def rotation_matrix(normal):
     return rotation
 
 
+point_list_read = DataConvert.read_points_list("/home/lvgeng/Code/TestingData/robotic/matlab/surface_interpolation_dir/matlab0928.json")
 
-point_list = DataConvert.read_points_list("/home/lvgeng/Code/TestingData/robotic/matlab/surface_interpolation_dir/matlab0917.json")
+point_list = []
+for point in point_list_read:
+    print(point)
+    if point[2] >= 0.07:
+        point_list.append(point)
+
 pcd = PointCloud()
 pcd.points = Vector3dVector(point_list)
 estimate_normals(pcd)
@@ -71,11 +77,12 @@ for normal in pcd.normals:
     else:
         normals.append(normal)
 pcd.normals = Vector3dVector(normals)
-pcd_down = geometry.voxel_down_sample(pcd, voxel_size=0.002)
 
+pcd_down = geometry.voxel_down_sample(pcd, voxel_size=0.002)
 
 trans_list = []
 for i, position in enumerate(pcd_down.points):
+    print("Rotation for point %d" % i)
     rotation_m = rotation_matrix(pcd_down.normals[i])
     trans = transforms3d.affines.compose(T=position, R=rotation_m, Z=[1, 1, 1])
     trans_list.append(trans)

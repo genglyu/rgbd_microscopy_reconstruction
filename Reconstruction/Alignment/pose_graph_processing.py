@@ -15,6 +15,7 @@ from TransformationData import *
 from typing import Dict
 from PoseGraphG2o import *
 from local_transformation_estimation import *
+import make_depth_map
 
 
 def make_pose_graph(pose_graph,

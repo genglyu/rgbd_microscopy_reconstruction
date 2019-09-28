@@ -5,10 +5,42 @@ from image_processing import *
 from TileInfo import *
 from TileInfoDict import *
 import cv2
+from make_depth_map import generate_microscope_intrinsic_open3d
+from crop_point_cloud import generate_cropped_tile
 
 
 # ======================================================================================================================
+def make_full_image_pcd_list_rgbd(tile_info_dict, color_directory_path,
+                                  depth_directory_path, depth_scale, depth_trunc,
+                                  width_by_pixel, height_by_pixel, width_by_m, height_by_m,
+                                  focal_distance_by_m,
+                                  downsample_factor=-1.0,
+                                  color_filter=[1.0, 1.0, 1.0]):
+    microcsope_intrinsic = \
+        generate_microscope_intrinsic_open3d(width_by_pixel=width_by_pixel,
+                                             height_by_pixel=height_by_pixel,
+                                             width_by_m=width_by_m,
+                                             height_by_m=height_by_m,
+                                             focal_distance_by_m=focal_distance_by_m)
+    pcd_list = []
+    for tile_info_key in tile_info_dict:
+        tile_info = tile_info_dict[tile_info_key]
+        color = io.read_image(join(color_directory_path, tile_info.file_name) + ".png")
+        depth = io.read_image(join(depth_directory_path, tile_info.file_name) + ".png")
+        rgbd = geometry.create_rgbd_image_from_color_and_depth(
+            color=color, depth=depth,
+            depth_scale=depth_scale,
+            depth_trunc=depth_trunc,
+            convert_rgb_to_intensity=False)
+        pcd = geometry.create_point_cloud_from_rgbd_image(rgbd, microcsope_intrinsic)
+        pcd.transform(tile_info.rgbd_camera_pose_matrix)
+        pcd_list.append(pcd)
+    return pcd_list
+
+
 # openCV involved in these two functions.
+
+
 def make_full_image_pcd_list_pose(tile_info_dict, color_directory_path, downsample_factor=-1.0, color_filter=[1.0, 1.0, 1.0]):
     pcd_list = []
     for tile_info_key in tile_info_dict:
@@ -20,6 +52,20 @@ def make_full_image_pcd_list_pose(tile_info_dict, color_directory_path, downsamp
                                                       cv_scale_factor=downsample_factor,
                                                       color_filter=color_filter)
         pcd.transform(tile_info.pose_matrix)
+        pcd_list.append(pcd)
+    return pcd_list
+
+
+def make_cropped_image_pcd_list_pose(tile_info_dict, img_directory_path):
+    pcd_list = []
+    for tile_info_key in tile_info_dict:
+        points, colors = generate_cropped_tile(tile_index=tile_info_key, tile_info_dict=tile_info_dict,
+                                               img_directory_path=img_directory_path)
+        pcd = PointCloud()
+        pcd.points = Vector3dVector(points)
+        pcd.colors = Vector3dVector(colors)
+        pcd.transform(tile_info_dict[tile_info_key].pose_matrix)
+
         pcd_list.append(pcd)
     return pcd_list
 
@@ -36,8 +82,6 @@ def make_full_image_pcd_list_sensor(tile_info_dict, color_directory_path, downsa
                     thickness=5,
                     lineType=cv2.LINE_AA,
                     bottomLeftOrigin=False)
-
-
         pcd = load_image_as_planar_point_cloud_open3d(image_bgr=img,
                                                       width_by_m=tile_info.width_by_m / 3,
                                                       height_by_m=tile_info.height_by_m / 3,

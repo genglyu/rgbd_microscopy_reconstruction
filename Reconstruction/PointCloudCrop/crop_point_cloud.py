@@ -1,0 +1,72 @@
+import numpy
+import cv2
+import sys
+import os
+import open3d
+sys.path.append("../Data_processing")
+
+import TileInfo
+
+
+def load_tile_image_as_points_and_color(img_path, width_by_m, height_by_m):
+    img_bgr = cv2.imread(img_path)
+    img_array = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    (height_by_pixel, width_by_pixel, value_length) = img_array.shape
+    # Normal direction: x+ direction. uv -> yz. Up and right defined as positive.
+    # Different from the coordinates of image pixels but suitable for visualization.
+    pixel_amount = height_by_pixel * width_by_pixel
+    points_position = numpy.mgrid[(height_by_pixel / 2):(-height_by_pixel + height_by_pixel / 2):-1,
+                      (-width_by_pixel / 2):(width_by_pixel - width_by_pixel / 2):1].reshape(2, -1).T
+    points_position = numpy.c_[
+        numpy.zeros(pixel_amount),
+        points_position[:, 1] * width_by_m / width_by_pixel,
+        points_position[:, 0] * height_by_m / height_by_pixel
+    ]
+
+    points_color = img_array.reshape(-1, 3)
+    points_color = points_color / 255.0
+
+    return points_position, points_color
+
+
+def crop_color_point_cloud(points, colors, source_trans, target_trans):
+    # print("numpy.asarray(points).T.shape")
+    # print(numpy.asarray(points).T.shape)
+    points_array = numpy.append(numpy.asarray(points).T, numpy.ones((1, len(points))), axis=0)
+
+    full_trans_matrix = numpy.dot(numpy.linalg.inv(target_trans), source_trans)
+    trans_restore_matrix = numpy.linalg.inv(full_trans_matrix)
+
+    points_colors_array = numpy.append(numpy.dot(full_trans_matrix, points_array), numpy.asarray(colors).T, axis=0)
+    points_colors_preserved = points_colors_array[:, points_colors_array[0, :] <= 0.000001]
+
+    points_preserved = numpy.dot(trans_restore_matrix, points_colors_preserved[0:4, :])[0:3, :].T
+    colors_preserved = points_colors_preserved[4:7, :].T
+
+    return points_preserved, colors_preserved
+
+
+def generate_cropped_tile(tile_index, tile_info_dict, img_directory_path):
+    print("Generating cropped tile %6d" % tile_index)
+    tile_info = tile_info_dict[tile_index]
+    points, colors = \
+        load_tile_image_as_points_and_color(
+            img_path=os.path.join(img_directory_path, tile_info.file_name) + ".png",
+            width_by_m=tile_info.width_by_m,
+            height_by_m=tile_info.height_by_m)
+    # pcd = open3d.PointCloud()
+    # coor = open3d.geometry.create_mesh_coordinate_frame(size=0.01, origin=(0, 0, 0))
+    # pcd.points = open3d.Vector3dVector(points)
+    # pcd.colors = open3d.Vector3dVector(colors)
+    # open3d.draw_geometries([pcd, coor])
+    for adjacent_tile_index in tile_info.confirmed_neighbour_list:
+        tile_info_target = tile_info_dict[adjacent_tile_index]
+        points, colors = crop_color_point_cloud(points=points, colors=colors,
+                                                source_trans=tile_info.pose_matrix,
+                                                target_trans=tile_info_target.pose_matrix)
+    # pcd = open3d.PointCloud()
+    # coor = open3d.geometry.create_mesh_coordinate_frame(size=0.01, origin=(0, 0, 0))
+    # pcd.points = open3d.Vector3dVector(points)
+    # pcd.colors = open3d.Vector3dVector(colors)
+    # open3d.draw_geometries([pcd, coor])
+    return points, colors
