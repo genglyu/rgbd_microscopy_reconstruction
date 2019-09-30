@@ -58,12 +58,12 @@ def rotation_matrix(normal):
     return rotation
 
 
-point_list_read = DataConvert.read_points_list("/home/lvgeng/Code/TestingData/robotic/matlab/surface_interpolation_dir/matlab0928.json")
+point_list_read = DataConvert.read_points_list("/home/lvgeng/Code/TestingData/robotic/matlab/surface_interpolation_dir/matlab0929_1.json")
 
 point_list = []
 for point in point_list_read:
     print(point)
-    if point[2] >= 0.07:
+    if point[2] >= 0.178:
         point_list.append(point)
 
 pcd = PointCloud()

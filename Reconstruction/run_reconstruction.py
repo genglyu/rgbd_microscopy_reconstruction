@@ -7,6 +7,7 @@ from os.path import *
 import sys
 sys.path.append("./Utility")
 sys.path.append("./Alignment")
+sys.path.append("./Color_correction")
 sys.path.append("./Data_processing")
 sys.path.append("./Visualization")
 sys.path.append("./Integration")
@@ -43,6 +44,9 @@ if __name__ == "__main__":
                         action="store_true",
                         help="Register pose graph and generate local transformations without calculating information."
                              "Add confirmed loop closure to tile_info_dict members")
+    parser.add_argument('--color_correction', '-c',
+                        action="store_true",
+                        help="Generate all color filter for global color correction")
     # make pose graph. Both pose graph and information matrix have different format.
     parser.add_argument('--make_pose_graph', '-m',
                         action="store_true",
@@ -68,7 +72,8 @@ if __name__ == "__main__":
 
     if not args.dict_make \
             and not args.dict_load \
-            and not args.register\
+            and not args.register \
+            and not args.color_correction \
             and not args.make_pose_graph \
             and not args.optimize \
             and not args.generate_depth_map \
@@ -117,6 +122,13 @@ if __name__ == "__main__":
         else:
             print("No tile_info_dict available in RAM")
             sys.exit()
+
+    if args.color_correction:
+        import global_color_correction
+        tile_info_dict = global_color_correction.generate_color_filters(tile_info_dict=tile_info_dict,
+                                                                        trans_data_manager=trans_data_manager)
+        TileInfoDict.save_tile_info_dict(join(config["path_data"], config["tile_info_dict_name"]),
+                                         tile_info_dict)
 
     # Make pose graph ============================================================================
     if args.make_pose_graph:

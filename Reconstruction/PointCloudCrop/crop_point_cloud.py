@@ -29,19 +29,46 @@ def load_tile_image_as_points_and_color(img_path, width_by_m, height_by_m):
     return points_position, points_color
 
 
-def crop_color_point_cloud(points, colors, source_trans, target_trans):
+def crop_color_point_cloud(points, colors, source_trans, target_trans, target_tile_width_by_m, target_tile_height_by_m):
     # print("numpy.asarray(points).T.shape")
     # print(numpy.asarray(points).T.shape)
+    s_center = numpy.dot(source_trans, numpy.array([0, 0, 0, 1]).T).T[0:3]
+    s_end = numpy.dot(source_trans, numpy.array([0.000001, 0, 0, 1]).T).T[0:3]
+    t_center = numpy.dot(target_trans, numpy.array([0, 0, 0, 1]).T).T[0:3]
+    t_end = numpy.dot(target_trans, numpy.array([0.000001, 0, 0, 1]).T).T[0:3]
+
+    center_distance = numpy.linalg.norm(s_center - t_center)
+    end_distance = numpy.linalg.norm(s_end - t_end)
+
     points_array = numpy.append(numpy.asarray(points).T, numpy.ones((1, len(points))), axis=0)
 
     full_trans_matrix = numpy.dot(numpy.linalg.inv(target_trans), source_trans)
     trans_restore_matrix = numpy.linalg.inv(full_trans_matrix)
 
-    points_colors_array = numpy.append(numpy.dot(full_trans_matrix, points_array), numpy.asarray(colors).T, axis=0)
-    points_colors_preserved = points_colors_array[:, points_colors_array[0, :] <= 0.000001]
+    # points_colors_array = numpy.append(numpy.dot(full_trans_matrix, points_array), numpy.asarray(colors).T, axis=0)
+    points_colors_array = numpy.append(numpy.dot(full_trans_matrix, points_array), numpy.asarray(points).T, axis=0)
+    points_colors_array = numpy.append(points_colors_array, numpy.asarray(colors).T, axis=0)
 
-    points_preserved = numpy.dot(trans_restore_matrix, points_colors_preserved[0:4, :])[0:3, :].T
-    colors_preserved = points_colors_preserved[4:7, :].T
+
+
+    if center_distance <= end_distance:
+        points_colors_preserved = \
+            points_colors_array[:, numpy.logical_or(points_colors_array[0, :] <= 0.000001,
+                                                    numpy.logical_or(numpy.logical_or(points_colors_array[1, :] >= target_tile_width_by_m / 2,
+                                                                                      points_colors_array[1, :] <= -target_tile_width_by_m / 2),
+                                                                     numpy.logical_or(points_colors_array[2, :] >= target_tile_height_by_m / 2,
+                                                                                      points_colors_array[2, :] <= -target_tile_height_by_m / 2)))]
+    else:
+        # points_colors_preserved = points_colors_array[:, points_colors_array[0, :] >= 0.000001]
+        points_colors_preserved = \
+            points_colors_array[:, numpy.logical_or(points_colors_array[0, :] >= 0.000001,
+                                                    numpy.logical_or(numpy.logical_or(points_colors_array[1, :] >= target_tile_width_by_m / 2,
+                                                                                      points_colors_array[1, :] <= -target_tile_width_by_m / 2),
+                                                                     numpy.logical_or(points_colors_array[2, :] >= target_tile_height_by_m / 2,
+                                                                                      points_colors_array[2, :] <= -target_tile_height_by_m / 2)))]
+    # points_preserved = numpy.dot(trans_restore_matrix, points_colors_preserved[0:4, :])[0:3, :].T
+    points_preserved = points_colors_preserved[4:7, :].T
+    colors_preserved = points_colors_preserved[7:10, :].T
 
     return points_preserved, colors_preserved
 
@@ -63,7 +90,9 @@ def generate_cropped_tile(tile_index, tile_info_dict, img_directory_path):
         tile_info_target = tile_info_dict[adjacent_tile_index]
         points, colors = crop_color_point_cloud(points=points, colors=colors,
                                                 source_trans=tile_info.pose_matrix,
-                                                target_trans=tile_info_target.pose_matrix)
+                                                target_trans=tile_info_target.pose_matrix,
+                                                target_tile_width_by_m=tile_info_target.width_by_m,
+                                                target_tile_height_by_m=tile_info_target.height_by_m)
     # pcd = open3d.PointCloud()
     # coor = open3d.geometry.create_mesh_coordinate_frame(size=0.01, origin=(0, 0, 0))
     # pcd.points = open3d.Vector3dVector(points)

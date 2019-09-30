@@ -20,6 +20,8 @@ class TileInfo:
         self.pose_matrix = numpy.identity(4)
         self.rgbd_camera_pose_matrix = numpy.identity(4)
 
+        self.color_and_illumination_correction = numpy.array([1.0, 1.0, 1.0])  # RGB space.
+
         self.position = numpy.array([init_transform_matrix[0][3],
                                      init_transform_matrix[1][3],
                                      init_transform_matrix[2][3]])
@@ -65,6 +67,8 @@ def tile_info_from_json_format(tile_info_json_format):
 
     new_tile_info.pose_matrix = numpy.asarray(tile_info_json_format["pose_matrix"])
     new_tile_info.rgbd_camera_pose_matrix = numpy.asarray(tile_info_json_format["rgbd_camera_pose_matrix"])
+    new_tile_info.color_and_illumination_correction = numpy.asarray(
+        tile_info_json_format["color_and_illumination_correction"])
 
     new_tile_info.position = numpy.asarray(tile_info_json_format["position"])
 
@@ -115,6 +119,8 @@ def tile_info_to_json_format(tile_info: TileInfo):
                              "init_transform_matrix": tile_info.init_transform_matrix.tolist(),
                              "pose_matrix": tile_info.pose_matrix.tolist(),
                              "rgbd_camera_pose_matrix": tile_info.rgbd_camera_pose_matrix.tolist(),
+
+                             "color_and_illumination_correction": tile_info.color_and_illumination_correction.tolist(),
 
                              "position": tile_info.position.tolist(),
 

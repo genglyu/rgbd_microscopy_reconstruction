@@ -40,7 +40,7 @@ def make_info_dict(config):
     for robotic_pose_file_path in robotic_pose_file_list:
 
         tile_info = load_robotic_pose_info(robotic_pose_file_path)
-        # print(join(config["path_data"], config["path_image_dir"], tile_info.file_name) + ".png")
+        print(join(config["path_data"], config["path_image_dir"], tile_info.file_name) + ".png")
         image = cv2.imread(join(config["path_data"], config["path_image_dir"], tile_info.file_name)+ ".png")
         (h, w, c) = image.shape
 

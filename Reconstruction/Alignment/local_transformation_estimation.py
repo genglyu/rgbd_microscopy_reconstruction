@@ -32,7 +32,7 @@ def planar_transformation_cv(s_img, t_img, crop_w=0, crop_h=0,
     #                             firstLevel=0, WTA_K=2, scoreType=cv2.ORB_HARRIS_SCORE,
     #                             nfeatures=nfeatures, patchSize=31)
 
-    sift_finder = cv2.xfeatures2d.SIFT_create(nfeatures=400,
+    sift_finder = cv2.xfeatures2d.SIFT_create(nfeatures=nfeatures,
                                               nOctaveLayers=3,
                                               contrastThreshold=0.001,
                                               edgeThreshold=100,
@@ -46,7 +46,6 @@ def planar_transformation_cv(s_img, t_img, crop_w=0, crop_h=0,
     # target_feature = cv2.detail.computeImageFeatures2(featuresFinder=orb_finder, image=t_img_crop)
     source_feature = cv2.detail.computeImageFeatures2(featuresFinder=sift_finder, image=s_img_crop)
     target_feature = cv2.detail.computeImageFeatures2(featuresFinder=sift_finder, image=t_img_crop)
-
 
     # print(source_feature)
     # print(target_feature)
@@ -67,9 +66,30 @@ def planar_transformation_cv(s_img, t_img, crop_w=0, crop_h=0,
                                       [0, 1.0, -crop_h],
                                       [0, 0, 1]])
         trans_cv = numpy.dot(trans_deoffset, numpy.dot(trans_cv, trans_offset))
+        # get the mean of the overlapping area   ============================================================
+        img_s_warped = cv2.warpAffine(src=s_img, M=trans_cv[0:2, :], dsize=(t_w, t_h))
+
+        img_s_gray = cv2.cvtColor(img_s_warped, cv2.COLOR_BGR2GRAY)
+        ret, img_s_mask_one_channel = cv2.threshold(img_s_gray, 0, 1, cv2.THRESH_BINARY)
+        mask_extended = img_s_mask_one_channel.reshape((-1)).T
+
+        pixel_count_overlapping = len(mask_extended[mask_extended[:] > 0])
+
+        mask_three_channel = numpy.c_[mask_extended,
+                                      mask_extended,
+                                      mask_extended].reshape((t_h, t_w, 3))
+
+        masked_img_t = mask_three_channel * t_img
+
+        mean_s = numpy.sum(img_s_warped.reshape((-1, 3)), axis=0) / pixel_count_overlapping
+        mean_t = numpy.sum(masked_img_t.reshape((-1, 3)), axis=0) / pixel_count_overlapping
+
     else:
         trans_cv = numpy.identity(4)
-    return match_conf, trans_cv
+        mean_s = numpy.asarray([0.0, 0.0, 0.0])
+        mean_t = numpy.asarray([0.0, 0.0, 0.0])
+        pixel_count_overlapping = 0
+    return match_conf, trans_cv, mean_s, mean_t, pixel_count_overlapping # These means are working in the BGR space.
 
 
 # ===========================================================================================================
@@ -204,17 +224,22 @@ def trans_estimation_pure(s_id,
     s_img = cv2.imread(s_img_path)
     t_img = cv2.imread(t_img_path)
 
-    matching_conf, trans_cv_2d = planar_transformation_cv(s_img, t_img,
-                                                          crop_w=crop_w,
-                                                          crop_h=crop_h,
-                                                          nfeatures=n_features,
-                                                          num_matches_thresh1=num_matches_thresh1,
-                                                          match_conf=match_conf_threshold)
+    matching_conf, trans_cv_2d, mean_s, mean_t, overlapping_pixels = \
+        planar_transformation_cv(s_img, t_img,
+                                 crop_w=crop_w,
+                                 crop_h=crop_h,
+                                 nfeatures=n_features,
+                                 num_matches_thresh1=num_matches_thresh1,
+                                 match_conf=match_conf_threshold)
     if matching_conf == 0:
         return LocalTransformationEstimationResult(s=s_id, t=t_id,
                                                    success=False,
                                                    conf=0,
-                                                   trans=numpy.identity(4))
+                                                   trans=numpy.identity(4),
+                                                   planar_trans=numpy.identity(3),
+                                                   mean_s=numpy.asarray([0.0, 0.0, 0.0]),
+                                                   mean_t=numpy.asarray([0.0, 0.0, 0.0]),
+                                                   overlapping_pixels=0)
 
     trans_planar_3d = transform_convert_from_2d_to_3d(trans_cv_2d=trans_cv_2d,
                                                       width_by_pixel_s=width_by_pixel_s,
@@ -234,7 +259,11 @@ def trans_estimation_pure(s_id,
         return LocalTransformationEstimationResult(s=s_id, t=t_id,
                                                    success=False,
                                                    conf=matching_conf,
-                                                   trans=trans_planar_3d)
+                                                   trans=trans_planar_3d,
+                                                   planar_trans=trans_cv_2d,
+                                                   mean_s=numpy.asarray([0.0, 0.0, 0.0]),
+                                                   mean_t=numpy.asarray([0.0, 0.0, 0.0]),
+                                                   overlapping_pixels=0)
     else:
         print("Tile %05d and %05d : Trans check passed" % (s_id, t_id))
         trans_3d = transform_planar_add_normal_direction(trans_planar_3d, s_init_trans, t_init_trans)
@@ -242,7 +271,11 @@ def trans_estimation_pure(s_id,
         return LocalTransformationEstimationResult(s=s_id, t=t_id,
                                                    success=True,
                                                    conf=matching_conf,
-                                                   trans=trans_3d)
+                                                   trans=trans_3d,
+                                                   planar_trans=trans_cv_2d,
+                                                   mean_s=mean_s,
+                                                   mean_t=mean_t,
+                                                   overlapping_pixels=overlapping_pixels)
 
 
 def trans_estimation_tile(tile_info_s: TileInfo, tile_info_t: TileInfo, config):
@@ -281,23 +314,22 @@ def real_translation_distance(planar_translation_distance, normal_direction_diff
     curved_translation_distance = 0
     return curved_translation_distance
 
-
 # Need some more work in this function.
 
 
-def extract_translation_distance(trans_matrix):
-    # takes a 4x4 matrix but it should only happen in the planar surface YoZ.#
-    translation_x = trans_matrix[0][3]
-    translation_y = trans_matrix[1][3]
-    translation_z = trans_matrix[2][3]
-    distance = math.sqrt(math.pow(translation_x, 2) + math.pow(translation_y, 2) + math.pow(translation_z, 2))
-    return distance
+# def extract_translation_distance(trans_matrix):
+#     # takes a 4x4 matrix but it should only happen in the planar surface YoZ.#
+#     translation_x = trans_matrix[0][3]
+#     translation_y = trans_matrix[1][3]
+#     translation_z = trans_matrix[2][3]
+#     distance = math.sqrt(math.pow(translation_x, 2) + math.pow(translation_y, 2) + math.pow(translation_z, 2))
+#     return distance
 
 
-def update_translation_distance(trans_matrix, new_distance):
-    distance = extract_translation_distance(trans_matrix)
-    distance_factor = new_distance / distance
-    trans_matrix[0][3] = trans_matrix[0][3] * distance_factor
-    trans_matrix[1][3] = trans_matrix[1][3] * distance_factor
-    trans_matrix[2][3] = trans_matrix[2][3] * distance_factor
-    return trans_matrix
+# def update_translation_distance(trans_matrix, new_distance):
+#     distance = extract_translation_distance(trans_matrix)
+#     distance_factor = new_distance / distance
+#     trans_matrix[0][3] = trans_matrix[0][3] * distance_factor
+#     trans_matrix[1][3] = trans_matrix[1][3] * distance_factor
+#     trans_matrix[2][3] = trans_matrix[2][3] * distance_factor
+#     return trans_matrix
