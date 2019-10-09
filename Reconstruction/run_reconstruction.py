@@ -5,6 +5,7 @@ import time, datetime
 from os.path import *
 
 import sys
+
 sys.path.append("./Utility")
 sys.path.append("./Alignment")
 sys.path.append("./Color_correction")
@@ -19,8 +20,6 @@ import TransformationData
 import PoseGraphG2o
 import VisualizerOpen3d
 import pose_graph_processing
-
-
 
 if __name__ == "__main__":
     # set_verbosity_level(verbosity_level=VerbosityLevel.Debug)
@@ -104,6 +103,7 @@ if __name__ == "__main__":
     # Registering ================================================================================
     if args.register:
         import image_registration
+
         if tile_info_dict is not None:
             trans_data_manager = TransformationData.TransformationDataPool(tile_info_dict, config)
             try:
@@ -124,9 +124,21 @@ if __name__ == "__main__":
             sys.exit()
 
     if args.color_correction:
-        import global_color_correction
-        tile_info_dict = global_color_correction.generate_color_filters(tile_info_dict=tile_info_dict,
-                                                                        trans_data_manager=trans_data_manager)
+        # import global_color_correction_by_group
+        # tile_info_dict = \
+        #     global_color_correction_by_group.generate_color_filters(tile_info_dict=tile_info_dict,
+        #                                                             trans_data_manager=trans_data_manager,
+        #                                                             volum_size_by_m=0.005)
+
+        # import global_color_correction_by_group_luminance
+        # tile_info_dict = \
+        #     global_color_correction_by_group_luminance.generate_color_filters(tile_info_dict=tile_info_dict,
+        #                                                                       trans_data_manager=trans_data_manager,
+        #                                                                       volum_size_by_m=0.001)
+
+        import global_color_correction_luminance
+        tile_info_dict = global_color_correction_luminance.generate_color_filters(tile_info_dict=tile_info_dict,
+                                                                                  trans_data_manager=trans_data_manager)
         TileInfoDict.save_tile_info_dict(join(config["path_data"], config["tile_info_dict_name"]),
                                          tile_info_dict)
 
@@ -169,12 +181,14 @@ if __name__ == "__main__":
     # generate_depth_map ==================================================================================
     if args.generate_depth_map:
         import integrate_rgbd
+
         tile_info_dict = integrate_rgbd.generate_depth_map_multiprocessing(tile_info_dict=tile_info_dict, config=config)
         TileInfoDict.save_tile_info_dict(join(config["path_data"], config["tile_info_dict_name"]), tile_info_dict)
 
     # Integrate ==================================================================================
     if args.integrate:
         import integrate_rgbd
+
         integrate_rgbd.integrate_object(tile_info_dict=tile_info_dict, config=config, save_mesh=True)
 
     # Visualize ==================================================================================

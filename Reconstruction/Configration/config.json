@@ -11,7 +11,7 @@
     "rough_pose_graph_name": "rough_pose_graph.g2o",
     "optimized_pose_graph_name": "optimized_pose_graph.g2o",
 
-    "potential_neighbour_searching_range": 0.01,
+    "potential_neighbour_searching_range": 0.004,
     "normal_direction_tolerance_by_cos": 0.8,
 
     "microscope_intrinsic":{
@@ -19,10 +19,10 @@
         "width_by_pixel": 640,
         "height_by_pixel": 480,
         "depth_scaling": 200000,
-        "depth_threshold": 0.5
+        "depth_threshold": 200000
     },
 
-    "size_by_m": [0.01, 0.0075],
+    "size_by_m": [0.0044, 0.0033],
     "crop_width_by_pixel": 10,
     "crop_height_by_pixel": 10,
 
@@ -46,8 +46,8 @@
         [0, 1, 0, 0, 0, 0],
         [0, 0, 1, 0, 0, 0],
         [0, 0, 0, 2, 0, 0],
-        [0, 0, 0, 0, 5, 0],
-        [0, 0, 0, 0, 0, 5]],
+        [0, 0, 0, 0, 3, 0],
+        [0, 0, 0, 0, 0, 3]],
     "match_info": [
         [10, 0, 0, 0, 0, 0],
         [0, 5, 0, 0, 0, 0],
@@ -58,20 +58,22 @@
 
     "visualization": [
         {
-            "pcd_pose": true,
+            "pcd_pose": false,
             "wireframes_pose": false,
 
-            "c_edgeset_pose": true,
+            "c_edgeset_pose": false,
             "f_edgeset_pose": false,
 
             "full_image_pcd_list_pose": false,
+            "cropped_image_pcd_list_pose": false,
 
             "pcd_sensor": false,
             "wireframes_sensor": false,
 
-            "c_edgeset_sensor": false,
+            "c_edgeset_sensor": true,
             "f_edgeset_sensor": false,
             "full_image_pcd_list_sensor": false,
+            "full_image_pcd_list_sensor_with_label": true,
 
             "sensor_edgeset": false,
 
@@ -89,7 +91,7 @@
 
     "full_image_pcd_pose_color_filter": [1, 1, 1],
 
-    "pcd_sensor_color": [1, 0.7, 0.7],
+    "pcd_sensor_color": [0.7, 0.7, 1],
     "wireframes_sensor_color": [0.7, 0.7, 1],
 
     "c_edgeset_sensor_color": [0.7, 0.7, 1],

@@ -45,29 +45,60 @@ def make_full_image_pcd_list_pose(tile_info_dict, color_directory_path, downsamp
     pcd_list = []
     for tile_info_key in tile_info_dict:
         tile_info = tile_info_dict[tile_info_key]
-        img = cv2.imread(color_directory_path + tile_info.file_name + ".png")
-        pcd = load_image_as_planar_point_cloud_open3d(
-            image_bgr=img,
-            width_by_m=tile_info.width_by_m,
-            height_by_m=tile_info.height_by_m,
-            cv_scale_factor=downsample_factor,
-            color_filter=color_filter*tile_info.color_and_illumination_correction)
-        pcd.transform(tile_info.pose_matrix)
-        pcd_list.append(pcd)
+        if len(tile_info.confirmed_neighbour_list) > 0:
+            img = cv2.imread(color_directory_path + tile_info.file_name + ".png")
+            pcd = load_image_as_planar_point_cloud_open3d(
+                image_bgr=img,
+                width_by_m=tile_info.width_by_m,
+                height_by_m=tile_info.height_by_m,
+                cv_scale_factor=downsample_factor,
+                color_filter=color_filter*tile_info.color_and_illumination_correction)
+            pcd.transform(tile_info.pose_matrix)
+            pcd_list.append(pcd)
+        else:
+            print("isolated tile %6d" % tile_info_key)
     return pcd_list
 
 
 def make_cropped_image_pcd_list_pose(tile_info_dict, img_directory_path):
     pcd_list = []
     for tile_info_key in tile_info_dict:
-        points, colors = generate_cropped_tile(tile_index=tile_info_key, tile_info_dict=tile_info_dict,
-                                               img_directory_path=img_directory_path)
-        pcd = PointCloud()
-        pcd.points = Vector3dVector(points)
-        pcd.colors = Vector3dVector(colors * tile_info_dict[tile_info_key].color_and_illumination_correction)
-        pcd.transform(tile_info_dict[tile_info_key].pose_matrix)
+        if len(tile_info_dict[tile_info_key].confirmed_neighbour_list) > 0:
+            points, colors = generate_cropped_tile(tile_index=tile_info_key, tile_info_dict=tile_info_dict,
+                                                   img_directory_path=img_directory_path)
+            pcd = PointCloud()
+            pcd.points = Vector3dVector(points)
+            pcd.colors = Vector3dVector(colors * tile_info_dict[tile_info_key].color_and_illumination_correction)
+            pcd.transform(tile_info_dict[tile_info_key].pose_matrix)
 
-        pcd_list.append(pcd)
+            pcd_list.append(pcd)
+        else:
+            print("isolated tile %6d" % tile_info_key)
+    return pcd_list
+
+
+def make_full_image_pcd_list_sensor_with_label(tile_info_dict, color_directory_path, downsample_factor=-1.0, size_factor=0.15, color_filter=[1.0, 1.0, 1.0]):
+    pcd_list = []
+    for tile_info_key in tile_info_dict:
+        tile_info = tile_info_dict[tile_info_key]
+        if len(tile_info.confirmed_neighbour_list) > 0:
+            img = cv2.imread(color_directory_path + tile_info.file_name + ".png")
+
+            cv2.putText(img=img, text=("%d" % tile_info_key), org=(200, 400),
+                        fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=5,
+                        color=(0, 255, 0),
+                        thickness=5,
+                        lineType=cv2.LINE_AA,
+                        bottomLeftOrigin=False)
+            pcd = load_image_as_planar_point_cloud_open3d(image_bgr=img,
+                                                          width_by_m=tile_info.width_by_m * size_factor,
+                                                          height_by_m=tile_info.height_by_m * size_factor,
+                                                          cv_scale_factor=downsample_factor,
+                                                          color_filter=color_filter)
+            pcd.transform(tile_info.init_transform_matrix)
+            pcd_list.append(pcd)
+        else:
+            print("Too isolated tile %6d" % tile_info_key)
     return pcd_list
 
 
@@ -75,21 +106,18 @@ def make_full_image_pcd_list_sensor(tile_info_dict, color_directory_path, downsa
     pcd_list = []
     for tile_info_key in tile_info_dict:
         tile_info = tile_info_dict[tile_info_key]
-        img = cv2.imread(color_directory_path + tile_info.file_name + ".png")
+        if len(tile_info.confirmed_neighbour_list) > 0:
+            img = cv2.imread(color_directory_path + tile_info.file_name + ".png")
 
-        cv2.putText(img=img, text=("%d" % tile_info_key), org=(200, 400),
-                    fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=5,
-                    color=(0, 255, 0),
-                    thickness=5,
-                    lineType=cv2.LINE_AA,
-                    bottomLeftOrigin=False)
-        pcd = load_image_as_planar_point_cloud_open3d(image_bgr=img,
-                                                      width_by_m=tile_info.width_by_m / 3,
-                                                      height_by_m=tile_info.height_by_m / 3,
-                                                      cv_scale_factor=downsample_factor,
-                                                      color_filter=color_filter)
-        pcd.transform(tile_info.init_transform_matrix)
-        pcd_list.append(pcd)
+            pcd = load_image_as_planar_point_cloud_open3d(image_bgr=img,
+                                                          width_by_m=tile_info.width_by_m,
+                                                          height_by_m=tile_info.height_by_m,
+                                                          cv_scale_factor=downsample_factor,
+                                                          color_filter=color_filter)
+            pcd.transform(tile_info.init_transform_matrix)
+            pcd_list.append(pcd)
+        else:
+            print("Too isolated tile %6d" % tile_info_key)
     return pcd_list
 # ======================================================================================================================
 # ======================================================================================================================
@@ -149,8 +177,8 @@ def make_wireframes_pose(tile_info_dict, color=[0.0, 0.0, 0.0]):
     for tile_info_key in tile_info_dict:
         tile_info = tile_info_dict[tile_info_key]
         tile_wireframe_list.append(make_tile_frame(trans_matrix=tile_info.pose_matrix,
-                                                   width_by_mm=tile_info.width_by_mm,
-                                                   height_by_mm=tile_info.height_by_mm,
+                                                   width_by_m=tile_info.width_by_mm,
+                                                   height_by_m=tile_info.height_by_mm,
                                                    color=color))
     return tile_wireframe_list
 
@@ -161,20 +189,20 @@ def make_wireframes_sensor(tile_info_dict, color=[0.0, 0.0, 0.0]):
     for tile_info_key in tile_info_dict:
         tile_info = tile_info_dict[tile_info_key]
         tile_wireframe_list.append(make_tile_frame(trans_matrix=tile_info.init_transform_matrix,
-                                                   width_by_mm=tile_info.width_by_mm,
-                                                   height_by_mm=tile_info.height_by_mm,
+                                                   width_by_m=tile_info.width_by_mm,
+                                                   height_by_m=tile_info.height_by_mm,
                                                    color=color))
     return tile_wireframe_list
 # =======================================================================================
 
 
 def make_tile_frame(trans_matrix=numpy.identity(4),
-                    width_by_mm=4.0, height_by_mm=3.0, color=[0.5, 0.5, 0.5]):
+                    width_by_m=4.0, height_by_m=3.0, color=[0.5, 0.5, 0.5]):
     tile_frame = LineSet()
-    lb_rb_rt_lt = [[0, -width_by_mm / 2, -height_by_mm / 2],
-                   [0,  width_by_mm / 2, -height_by_mm / 2],
-                   [0,  width_by_mm / 2,  height_by_mm / 2],
-                   [0, -width_by_mm / 2,  height_by_mm / 2]
+    lb_rb_rt_lt = [[0, -width_by_m / 2, -height_by_m / 2],
+                   [0, width_by_m / 2, -height_by_m / 2],
+                   [0, width_by_m / 2, height_by_m / 2],
+                   [0, -width_by_m / 2, height_by_m / 2]
                    ]
     lines = [[0, 1], [1, 2], [2, 3], [3, 0]]
     colors = [color, color, color, color]

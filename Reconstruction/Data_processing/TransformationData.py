@@ -75,8 +75,12 @@ class TransformationDataPool:
         try:
             local_trans_estimation = self.trans_dict[(s_id, t_id)]
         except:
-            local_trans_estimation = LocalTransformationEstimationResult(s_id, t_id, False, 0,
-                                                                         numpy.identity(4), numpy.identity(3))
+            local_trans_estimation = LocalTransformationEstimationResult(s=s_id, t=t_id, success=False, conf=0,
+                                                                         trans=numpy.identity(4),
+                                                                         planar_trans=numpy.identity(3),
+                                                                         mean_s=[1.0, 1.0, 1.0],
+                                                                         mean_t=[1.0, 1.0, 1.0],
+                                                                         overlapping_pixels=1)
         return local_trans_estimation
 
     def get_trans_extend(self, s_id, t_id):

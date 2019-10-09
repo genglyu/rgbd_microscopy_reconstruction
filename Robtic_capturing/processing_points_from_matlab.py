@@ -58,13 +58,13 @@ def rotation_matrix(normal):
     return rotation
 
 
-point_list_read = DataConvert.read_points_list("/home/lvgeng/Code/TestingData/robotic/matlab/surface_interpolation_dir/matlab0929_1.json")
+point_list_read = DataConvert.read_points_list("/home/lvgeng/Code/TestingData/robotic/matlab/surface_interpolation_dir/matlab_1002_2.json")
 
 point_list = []
 for point in point_list_read:
     print(point)
-    if point[2] >= 0.178:
-        point_list.append(point)
+    # if point[2] >= 0.137:
+    point_list.append(point)
 
 pcd = PointCloud()
 pcd.points = Vector3dVector(point_list)
@@ -78,12 +78,32 @@ for normal in pcd.normals:
         normals.append(normal)
 pcd.normals = Vector3dVector(normals)
 
-pcd_down = geometry.voxel_down_sample(pcd, voxel_size=0.002)
+pcd_down = geometry.voxel_down_sample(pcd, voxel_size=0.0013)
+
+coor = geometry.create_mesh_coordinate_frame(size=0.1)
+
+pcd_down = io.read_point_cloud("cropped_1.ply")
+
+viewer = VisualizerWithEditing()
+viewer.create_window()
+
+viewer.add_geometry(pcd_down)
+
+viewer.add_geometry(coor)
+
+viewer.run()
+viewer.destroy_window()
+
+
+pcd_cropped = io.read_point_cloud("cropped_1.ply")
+
+draw_geometries([coor, pcd_cropped])
+
 
 trans_list = []
-for i, position in enumerate(pcd_down.points):
+for i, position in enumerate(pcd_cropped.points):
     print("Rotation for point %d" % i)
-    rotation_m = rotation_matrix(pcd_down.normals[i])
+    rotation_m = rotation_matrix(pcd_cropped.normals[i])
     trans = transforms3d.affines.compose(T=position, R=rotation_m, Z=[1, 1, 1])
     trans_list.append(trans)
 
@@ -91,5 +111,3 @@ DataConvert.save_trans_list(
     path="/home/lvgeng/Code/TestingData/robotic/matlab/surface_interpolation_dir/robotic_reconstruction_trans_interpolated.json",
     trans_list=trans_list)
 
-
-draw_geometries([pcd_down])

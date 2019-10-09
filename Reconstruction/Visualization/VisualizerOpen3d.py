@@ -29,6 +29,8 @@ class MicroscopyReconstructionVisualizerOpen3d:
 
         self.full_image_pcd_list_pose = None
         self.cropped_image_pcd_list_pose = None
+
+        self.highlight_tile = None
         # ==================================================
         self.pcd_sensor = None
         self.wireframes_sensor = None
@@ -37,6 +39,7 @@ class MicroscopyReconstructionVisualizerOpen3d:
         self.f_edgeset_sensor = None
 
         self.full_image_pcd_list_sensor = None
+        self.full_image_pcd_list_sensor_with_label = None
 
         self.sensor_edgeset = None
 
@@ -49,11 +52,14 @@ class MicroscopyReconstructionVisualizerOpen3d:
                 f_edgeset_pose=view_setting["f_edgeset_pose"],
                 full_image_pcd_list_pose=view_setting["full_image_pcd_list_pose"],
                 cropped_image_pcd_list_pose=view_setting["cropped_image_pcd_list_pose"],
+                highlight_tile_list=view_setting["highlight_tile_list"],
+
                 pcd_sensor=view_setting["pcd_sensor"],
                 wireframes_sensor=view_setting["wireframes_sensor"],
                 c_edgeset_sensor=view_setting["c_edgeset_sensor"],
                 f_edgeset_sensor=view_setting["f_edgeset_sensor"],
                 full_image_pcd_list_sensor=view_setting["full_image_pcd_list_sensor"],
+                full_image_pcd_list_sensor_with_label=view_setting["full_image_pcd_list_sensor_with_label"],
                 image_pcd_downsample_factor=view_setting["image_pcd_downsample_factor"]
             )
 
@@ -64,17 +70,31 @@ class MicroscopyReconstructionVisualizerOpen3d:
              f_edgeset_pose=False,
              full_image_pcd_list_pose=False,
              cropped_image_pcd_list_pose=False,
+             highlight_tile_list=[],
 
              pcd_sensor=False,
              wireframes_sensor=False,
              c_edgeset_sensor=False,
              f_edgeset_sensor=False,
              full_image_pcd_list_sensor=False,
+             full_image_pcd_list_sensor_with_label=False,
 
              sensor_edgeset=False,
              image_pcd_downsample_factor=0.1):
 
         draw_list = []
+
+        if len(highlight_tile_list) > 0:
+            highlighted_wire_frames = []
+            for tile_key in highlight_tile_list:
+                tile_info = self.tile_info_dict[tile_key]
+                wire_frame = make_tile_frame(
+                    trans_matrix=numpy.dot(tile_info.pose_matrix, numpy.array([[1,0,0,0.00002], [0,1,0,0], [0,0,1,0], [1,0,0,1]])),
+                    width_by_m=tile_info.width_by_m, height_by_m=tile_info.height_by_m, color=[0.0, 1.0, 0.])
+                highlighted_wire_frames.append(wire_frame)
+            self.highlight_tile = highlighted_wire_frames
+            draw_list += self.highlight_tile
+
         if pcd_pose:
             if self.pcd_pose is None:
                 self.pcd_pose = make_point_cloud(points=self.pose_pan["points"],
@@ -148,6 +168,7 @@ class MicroscopyReconstructionVisualizerOpen3d:
                                                       color=self.config["f_edgeset_sensor_color"])
             draw_list += [self.f_edgeset_sensor]
 
+
         if full_image_pcd_list_sensor:
             if self.full_image_pcd_list_sensor is None:
                 self.full_image_pcd_list_sensor = \
@@ -158,6 +179,17 @@ class MicroscopyReconstructionVisualizerOpen3d:
                                                     color_filter=self.config["full_image_pcd_sensor_color_filter"]
                                                     )
             draw_list += self.full_image_pcd_list_sensor
+
+        if full_image_pcd_list_sensor_with_label:
+            if self.full_image_pcd_list_sensor_with_label is None:
+                self.full_image_pcd_list_sensor_with_label = \
+                    make_full_image_pcd_list_sensor_with_label(tile_info_dict=self.tile_info_dict,
+                                                               downsample_factor=image_pcd_downsample_factor,
+                                                               color_directory_path=join(self.config["path_data"],
+                                                                                         self.config["path_image_dir"]),
+                                                               color_filter=self.config["full_image_pcd_sensor_color_filter"]
+                                                               )
+            draw_list += self.full_image_pcd_list_sensor_with_label
 
         if sensor_edgeset:
             if self.sensor_edgeset is None:

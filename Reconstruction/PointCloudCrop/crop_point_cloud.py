@@ -26,6 +26,15 @@ def load_tile_image_as_points_and_color(img_path, width_by_m, height_by_m):
     points_color = img_array.reshape(-1, 3)
     points_color = points_color / 255.0
 
+    # points_colors_array = numpy.c_[points_position, points_color]
+    # points_colors_array_preserved = points_colors_array[numpy.logical_and(
+    #     numpy.logical_and(points_colors_array[:, 1] <= width_by_m / 2 - 0.002,
+    #                      points_colors_array[:, 1] >= -width_by_m / 2 + 0.002),
+    #     numpy.logical_and(points_colors_array[:, 2] <= height_by_m / 2 - 0.001,
+    #                      points_colors_array[:, 2] >= -height_by_m / 2 + 0.001)), :]
+    # points_position = points_colors_array_preserved[:, 0:3]
+    # points_color = points_colors_array_preserved[:, 3:6]
+
     return points_position, points_color
 
 
@@ -33,9 +42,10 @@ def crop_color_point_cloud(points, colors, source_trans, target_trans, target_ti
     # print("numpy.asarray(points).T.shape")
     # print(numpy.asarray(points).T.shape)
     s_center = numpy.dot(source_trans, numpy.array([0, 0, 0, 1]).T).T[0:3]
-    s_end = numpy.dot(source_trans, numpy.array([0.000001, 0, 0, 1]).T).T[0:3]
     t_center = numpy.dot(target_trans, numpy.array([0, 0, 0, 1]).T).T[0:3]
-    t_end = numpy.dot(target_trans, numpy.array([0.000001, 0, 0, 1]).T).T[0:3]
+
+    s_end = numpy.dot(source_trans, numpy.array([0.00001, 0, 0, 1]).T).T[0:3]
+    t_end = numpy.dot(target_trans, numpy.array([0.00001, 0, 0, 1]).T).T[0:3]
 
     center_distance = numpy.linalg.norm(s_center - t_center)
     end_distance = numpy.linalg.norm(s_end - t_end)
@@ -52,20 +62,26 @@ def crop_color_point_cloud(points, colors, source_trans, target_trans, target_ti
 
 
     if center_distance <= end_distance:
+        # points_colors_preserved = \
+        #     points_colors_array[:, points_colors_array[0, :] <= 0.0000003]
         points_colors_preserved = \
-            points_colors_array[:, numpy.logical_or(points_colors_array[0, :] <= 0.000001,
+            points_colors_array[:, numpy.logical_or(points_colors_array[0, :] <= 0.0000003,
                                                     numpy.logical_or(numpy.logical_or(points_colors_array[1, :] >= target_tile_width_by_m / 2,
                                                                                       points_colors_array[1, :] <= -target_tile_width_by_m / 2),
                                                                      numpy.logical_or(points_colors_array[2, :] >= target_tile_height_by_m / 2,
                                                                                       points_colors_array[2, :] <= -target_tile_height_by_m / 2)))]
     else:
-        # points_colors_preserved = points_colors_array[:, points_colors_array[0, :] >= 0.000001]
-        points_colors_preserved = \
-            points_colors_array[:, numpy.logical_or(points_colors_array[0, :] >= 0.000001,
-                                                    numpy.logical_or(numpy.logical_or(points_colors_array[1, :] >= target_tile_width_by_m / 2,
-                                                                                      points_colors_array[1, :] <= -target_tile_width_by_m / 2),
-                                                                     numpy.logical_or(points_colors_array[2, :] >= target_tile_height_by_m / 2,
-                                                                                      points_colors_array[2, :] <= -target_tile_height_by_m / 2)))]
+        # points_colors_preserved = \
+        #     points_colors_array[:, points_colors_array[0, :] >= -0.0000003]
+
+        points_colors_preserved = points_colors_array
+
+        # points_colors_preserved = \
+        #     points_colors_array[:, numpy.logical_or(points_colors_array[0, :] >= -0.0000003,
+        #                                             numpy.logical_or(numpy.logical_or(points_colors_array[1, :] >= target_tile_width_by_m / 2 - 0.002,
+        #                                                                               points_colors_array[1, :] <= -target_tile_width_by_m / 2 + 0.002),
+        #                                                              numpy.logical_or(points_colors_array[2, :] >= target_tile_height_by_m / 2 - 0.001,
+        #                                                                               points_colors_array[2, :] <= -target_tile_height_by_m / 2 + 0.001)))]
     # points_preserved = numpy.dot(trans_restore_matrix, points_colors_preserved[0:4, :])[0:3, :].T
     points_preserved = points_colors_preserved[4:7, :].T
     colors_preserved = points_colors_preserved[7:10, :].T
