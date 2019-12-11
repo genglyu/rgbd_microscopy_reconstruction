@@ -1,9 +1,24 @@
 {
     "path_data": "",
+    "color_coded_triangle_mesh": "coded_triangle_mesh.ply",
+    "textured_triangle_mesh_data": "textured_triangle_mesh.json",
+    "merged_texture_dir": "textures/",
+    "merged_texture_file_name_template": "tex_%07d.png",
+    "recaptured_tile_dir": "captured/",
+    "recaptured_tile_template": "tile_%06d.png",
+    "original_tile_template": "tile_%06d.png",
+
+    "dataset_folder_template": "Dataset_%02d",
     "path_tile_info": "tileInfo/",
     "path_image_dir": "color/",
     "path_depth_dir": "depth/",
     "path_scene_dir": "scene/",
+
+    "fragments_voxel_size": -1,
+    "path_fragments_dir": "fragments/",
+    "fragment_template": "tile_group_%02d.ply",
+
+    "group_folder_ids": [0],
 
     "local_transformation_data_pool_name" : "local_trans_dict.json",
     "tile_info_dict_name": "tile_info_dict.json",
@@ -11,20 +26,22 @@
     "rough_pose_graph_name": "rough_pose_graph.g2o",
     "optimized_pose_graph_name": "optimized_pose_graph.g2o",
 
-    "potential_neighbour_searching_range": 0.004,
+    "potential_neighbour_searching_range": 4,
     "normal_direction_tolerance_by_cos": 0.8,
 
     "microscope_intrinsic":{
-        "focal_distance": 0.1,
+        "focal_distance_by_mm": 40,
         "width_by_pixel": 640,
         "height_by_pixel": 480,
         "depth_scaling": 200000,
         "depth_threshold": 200000
     },
 
-    "size_by_m": [0.0044, 0.0033],
-    "crop_width_by_pixel": 10,
-    "crop_height_by_pixel": 10,
+    "global_scaling": 1000,
+
+    "size_by_mm": [4.4, 3.3],
+    "crop_width_by_pixel": 50,
+    "crop_height_by_pixel": 50,
 
     "n_features": 500,
     "num_matches_thresh1": 6,
@@ -55,6 +72,13 @@
         [0, 0, 0, 5, 0, 0],
         [0, 0, 0, 0, 1, 0],
         [0, 0, 0, 0, 0, 1]],
+    "match_info_between_groups": [
+        [10, 0, 0, 0, 0, 0],
+        [0, 5, 0, 0, 0, 0],
+        [0, 0, 5, 0, 0, 0],
+        [0, 0, 0, 5, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0]],
 
     "visualization": [
         {
@@ -64,16 +88,17 @@
             "c_edgeset_pose": false,
             "f_edgeset_pose": false,
 
-            "full_image_pcd_list_pose": false,
+            "full_image_pcd_list_pose": true,
             "cropped_image_pcd_list_pose": false,
+            "highlight_tile_list": [],
 
             "pcd_sensor": false,
             "wireframes_sensor": false,
 
-            "c_edgeset_sensor": true,
+            "c_edgeset_sensor": false,
             "f_edgeset_sensor": false,
             "full_image_pcd_list_sensor": false,
-            "full_image_pcd_list_sensor_with_label": true,
+            "full_image_pcd_list_sensor_with_label": false,
 
             "sensor_edgeset": false,
 

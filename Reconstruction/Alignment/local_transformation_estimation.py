@@ -104,13 +104,13 @@ def planar_transformation_cv(s_img, t_img, crop_w=0, crop_h=0,
 
 def transform_convert_from_2d_to_3d(trans_cv_2d,
                                     width_by_pixel_s=320, height_by_pixel_s=240,
-                                    width_by_m_s=0.0032, height_by_m_s=0.0016,
+                                    width_by_mm_s=3.2, height_by_mm_s=1.6,
                                     width_by_pixel_t=640, height_by_pixel_t=480,
-                                    width_by_m_t=0.0064, height_by_m_t=0.0048):
-    scaling_compensate_x = (width_by_m_t / width_by_pixel_t) / (width_by_m_s / width_by_pixel_s)
-    scaling_compensate_y = (height_by_m_t / height_by_pixel_t) / (height_by_m_s / height_by_pixel_s)
-    trans_compensate_x = width_by_m_t / width_by_pixel_t
-    trans_compensate_y = height_by_m_t / height_by_pixel_t
+                                    width_by_mm_t=6.4, height_by_mm_t=4.8):
+    scaling_compensate_x = (width_by_mm_t / width_by_pixel_t) / (width_by_mm_s / width_by_pixel_s)
+    scaling_compensate_y = (height_by_mm_t / height_by_pixel_t) / (height_by_mm_s / height_by_pixel_s)
+    trans_compensate_x = width_by_mm_t / width_by_pixel_t
+    trans_compensate_y = height_by_mm_t / height_by_pixel_t
 
     compensate_factors = numpy.asarray([[1, 0, 0, 0],
                                         [0, scaling_compensate_x, scaling_compensate_y, trans_compensate_x],
@@ -125,12 +125,12 @@ def transform_convert_from_2d_to_3d(trans_cv_2d,
     # The trans_deoffset and trans_offset are because for image space the range is 0 < x < width, height > y > 0
     # but in world space it is -width/2 < x < width/2, -height/2 < y < height/2
     trans_deoffset = [[1, 0, 0, 0],
-                      [0, 1, 0, -width_by_m_t / 2],
-                      [0, 0, 1, height_by_m_t / 2],
+                      [0, 1, 0, -width_by_mm_t / 2],
+                      [0, 0, 1, height_by_mm_t / 2],
                       [0, 0, 0, 1]]
     trans_offset = [[1, 0, 0, 0],
-                    [0, 1, 0, width_by_m_s / 2],
-                    [0, 0, 1, -height_by_m_s / 2],
+                    [0, 1, 0, width_by_mm_s / 2],
+                    [0, 0, 1, -height_by_mm_s / 2],
                     [0, 0, 0, 1]]
 
     trans_planar_3d = numpy.dot(numpy.dot(trans_deoffset, trans_cv_3d), trans_offset)
@@ -202,10 +202,10 @@ def trans_estimation_pure(s_id,
                           width_by_pixel_t,
                           height_by_pixel_t,
 
-                          width_by_m_s,
-                          height_by_m_s,
-                          width_by_m_t,
-                          height_by_m_t,
+                          width_by_mm_s,
+                          height_by_mm_s,
+                          width_by_mm_t,
+                          height_by_mm_t,
 
                           crop_w,
                           crop_h,
@@ -244,12 +244,12 @@ def trans_estimation_pure(s_id,
     trans_planar_3d = transform_convert_from_2d_to_3d(trans_cv_2d=trans_cv_2d,
                                                       width_by_pixel_s=width_by_pixel_s,
                                                       height_by_pixel_s=height_by_pixel_s,
-                                                      width_by_m_s=width_by_m_s,
-                                                      height_by_m_s=height_by_m_s,
+                                                      width_by_mm_s=width_by_mm_s,
+                                                      height_by_mm_s=height_by_mm_s,
                                                       width_by_pixel_t=width_by_pixel_t,
                                                       height_by_pixel_t=height_by_pixel_t,
-                                                      width_by_m_t=width_by_m_t,
-                                                      height_by_m_t=height_by_m_t)
+                                                      width_by_mm_t=width_by_mm_t,
+                                                      height_by_mm_t=height_by_mm_t)
 
     if not trans_local_check(trans_planar_3d, s_init_trans, t_init_trans,
                              scaling_tolerance=scaling_tolerance,
@@ -290,10 +290,10 @@ def trans_estimation_tile(tile_info_s: TileInfo, tile_info_t: TileInfo, config):
                                  height_by_pixel_s=tile_info_s.height_by_pixel,
                                  width_by_pixel_t=tile_info_t.width_by_pixel,
                                  height_by_pixel_t=tile_info_t.height_by_pixel,
-                                 width_by_m_s=tile_info_s.width_by_m,
-                                 height_by_m_s=tile_info_s.height_by_m,
-                                 width_by_m_t=tile_info_t.width_by_m,
-                                 height_by_m_t=tile_info_t.height_by_m,
+                                 width_by_mm_s=tile_info_s.width_by_mm,
+                                 height_by_mm_s=tile_info_s.height_by_mm,
+                                 width_by_mm_t=tile_info_t.width_by_mm,
+                                 height_by_mm_t=tile_info_t.height_by_mm,
                                  crop_w=config["crop_width_by_pixel"],
                                  crop_h=config["crop_height_by_pixel"],
                                  s_init_trans=tile_info_s.init_transform_matrix,

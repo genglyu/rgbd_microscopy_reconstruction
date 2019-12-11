@@ -6,6 +6,7 @@ import TileInfo
 import TileInfoDict
 import numba
 
+
 def bgr_to_luminance(bgr_color):
     return 0.2126 * bgr_color[2] + 0.7152 * bgr_color[1] + 0.2126 * bgr_color[0]
 
@@ -13,8 +14,11 @@ def bgr_to_luminance(bgr_color):
 def generate_color_filters(tile_info_dict, trans_data_manager: TransformationData.TransformationDataPool):
     edges_count = 0
     for (s, t) in trans_data_manager.trans_dict:
+        print("(s, t)")
+        print((s, t))
         trans_estimation = trans_data_manager.trans_dict[(s, t)]
-        if trans_estimation.success and trans_estimation.overlapping_pixels > (tile_info_dict[s].width_by_pixel * tile_info_dict[s].height_by_pixel * 0.3):
+        if trans_estimation.success \
+                and trans_estimation.overlapping_pixels > (tile_info_dict[s].width_by_pixel * tile_info_dict[s].height_by_pixel * 0.3):
             edges_count += 1
 
     tile_info_key_list = []

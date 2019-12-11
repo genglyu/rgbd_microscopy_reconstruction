@@ -1,11 +1,13 @@
 import sys
+import numpy
 
 sys.path.append("../Data_processing")
 sys.path.append("../../Utility")
-from image_processing import *
-from TileInfo import *
-from TileInfoDict import *
-from visualization_make import *
+import image_processing
+import TileInfo
+import TileInfoDict
+import visualization_make
+import open3d
 
 
 class MicroscopyReconstructionVisualizerOpen3d:
@@ -14,11 +16,11 @@ class MicroscopyReconstructionVisualizerOpen3d:
         self.tile_info_dict = tile_info_dict
         self.config = config
 
-        self.pose_pan = generate_pose_points_and_normals(tile_info_dict)
-        self.sensor_pan = generate_sensor_points_and_normals(tile_info_dict)
+        self.pose_pan = visualization_make.generate_pose_points_and_normals(tile_info_dict)
+        self.sensor_pan = visualization_make.generate_sensor_points_and_normals(tile_info_dict)
 
-        self.c_edges = generate_confirmed_edges(tile_info_dict)
-        self.f_edges = generate_false_edges(tile_info_dict)
+        self.c_edges = visualization_make.generate_confirmed_edges(tile_info_dict)
+        self.f_edges = visualization_make.generate_false_edges(tile_info_dict)
 
         # ==================================================
         self.pcd_pose = None
@@ -88,113 +90,118 @@ class MicroscopyReconstructionVisualizerOpen3d:
             highlighted_wire_frames = []
             for tile_key in highlight_tile_list:
                 tile_info = self.tile_info_dict[tile_key]
-                wire_frame = make_tile_frame(
-                    trans_matrix=numpy.dot(tile_info.pose_matrix, numpy.array([[1,0,0,0.00002], [0,1,0,0], [0,0,1,0], [1,0,0,1]])),
-                    width_by_m=tile_info.width_by_m, height_by_m=tile_info.height_by_m, color=[0.0, 1.0, 0.])
+                wire_frame = visualization_make.make_tile_frame(
+                    trans_matrix=TileInfoDict.numpy.dot(tile_info.pose_matrix, TileInfoDict.numpy.array([[1, 0, 0, 0.00002], [0, 1, 0, 0], [0, 0, 1, 0], [1, 0, 0, 1]])),
+                    width_by_mm=tile_info.width_by_m, height_by_mm=tile_info.height_by_m, color=[0.0, 1.0, 0.])
                 highlighted_wire_frames.append(wire_frame)
             self.highlight_tile = highlighted_wire_frames
             draw_list += self.highlight_tile
 
         if pcd_pose:
             if self.pcd_pose is None:
-                self.pcd_pose = make_point_cloud(points=self.pose_pan["points"],
-                                                 color=self.config["pcd_pose_color"],
-                                                 normals=self.pose_pan["normals"])
+                self.pcd_pose = visualization_make.make_point_cloud(points=self.pose_pan["points"],
+                                                                    color=self.config["pcd_pose_color"],
+                                                                    normals=self.pose_pan["normals"])
             draw_list += [self.pcd_pose]
 
         if wireframes_pose:
             if self.wireframes_pose is None:
                 self.wireframes_pose = \
-                    make_wireframes_pose(tile_info_dict=self.tile_info_dict,
-                                         color=self.config["wireframes_pose_color"])
+                    visualization_make.make_wireframes_pose(tile_info_dict=self.tile_info_dict,
+                                                            color=self.config["wireframes_pose_color"])
             draw_list += self.wireframes_pose
 
         if c_edgeset_pose:
             if self.c_edgeset_pose is None:
-                self.c_edgeset_pose = make_edge_set(points=self.pose_pan["points"],
-                                                    edges=self.c_edges,
-                                                    color=self.config["c_edgeset_pose_color"])
+                self.c_edgeset_pose = visualization_make.make_edge_set(points=self.pose_pan["points"],
+                                                                       edges=self.c_edges,
+                                                                       color=self.config["c_edgeset_pose_color"])
             draw_list += [self.c_edgeset_pose]
         if f_edgeset_pose:
             if self.f_edgeset_pose is None:
-                self.f_edgeset_pose = make_edge_set(points=self.pose_pan["points"],
-                                                    edges=self.f_edges,
-                                                    color=self.config["f_edgeset_pose_color"])
+                self.f_edgeset_pose = visualization_make.make_edge_set(points=self.pose_pan["points"],
+                                                                       edges=self.f_edges,
+                                                                       color=self.config["f_edgeset_pose_color"])
             draw_list += [self.f_edgeset_pose]
 
         if full_image_pcd_list_pose:
             if self.full_image_pcd_list_pose is None:
                 self.full_image_pcd_list_pose = \
-                    make_full_image_pcd_list_pose(tile_info_dict=self.tile_info_dict,
-                                                  color_directory_path=join(self.config["path_data"],
-                                                                            self.config["path_image_dir"]),
-                                                  downsample_factor=image_pcd_downsample_factor,
-                                                  color_filter=self.config["full_image_pcd_pose_color_filter"]
-                                                  )
+                    visualization_make.make_full_image_pcd_list_pose(tile_info_dict=self.tile_info_dict,
+
+                                                                     path_data=self.config["path_data"],
+                                                                     dataset_group_template=self.config[
+                                                                         "dataset_folder_template"],
+                                                                     color_directory_path=self.config["path_image_dir"],
+
+                                                                     downsample_factor=image_pcd_downsample_factor,
+                                                                     color_filter=self.config["full_image_pcd_pose_color_filter"]
+                                                                     )
             draw_list += self.full_image_pcd_list_pose
 
         if cropped_image_pcd_list_pose:
             if self.cropped_image_pcd_list_pose is None:
                 self.cropped_image_pcd_list_pose = \
-                    make_cropped_image_pcd_list_pose(tile_info_dict=self.tile_info_dict,
-                                                     img_directory_path=join(self.config["path_data"],
-                                                                             self.config["path_image_dir"]))
+                    visualization_make.make_cropped_image_pcd_list_pose(tile_info_dict=self.tile_info_dict,
+                                                                        img_directory_path=TileInfoDict.join(self.config["path_data"],
+                                                                                                             self.config["path_image_dir"]))
             draw_list += self.cropped_image_pcd_list_pose
 
         if pcd_sensor:
             if self.pcd_sensor is None:
-                self.pcd_sensor = make_point_cloud(points=self.sensor_pan["points"],
-                                                   color=self.config["pcd_sensor_color"],
-                                                   normals=self.sensor_pan["normals"])
+                self.pcd_sensor = visualization_make.make_point_cloud(points=self.sensor_pan["points"],
+                                                                      color=self.config["pcd_sensor_color"],
+                                                                      normals=self.sensor_pan["normals"])
             draw_list += [self.pcd_sensor]
 
         if wireframes_sensor:
             if self.wireframes_sensor is None:
                 self.wireframes_sensor = \
-                    make_wireframes_sensor(tile_info_dict=self.tile_info_dict,
-                                           color=self.config["wireframes_sensor_color"])
+                    visualization_make.make_wireframes_sensor(tile_info_dict=self.tile_info_dict,
+                                                              color=self.config["wireframes_sensor_color"])
             draw_list += self.wireframes_sensor
 
         if c_edgeset_sensor:
             if self.c_edgeset_sensor is None:
-                self.c_edgeset_sensor = make_edge_set(points=self.sensor_pan["points"],
-                                                      edges=self.c_edges,
-                                                      color=self.config["c_edgeset_sensor_color"])
+                self.c_edgeset_sensor = visualization_make.make_edge_set(points=self.sensor_pan["points"],
+                                                                         edges=self.c_edges,
+                                                                         color=self.config["c_edgeset_sensor_color"])
             draw_list += [self.c_edgeset_sensor]
         if f_edgeset_sensor:
             if self.f_edgeset_sensor is None:
-                self.f_edgeset_sensor = make_edge_set(points=self.sensor_pan["points"],
-                                                      edges=self.f_edges,
-                                                      color=self.config["f_edgeset_sensor_color"])
+                self.f_edgeset_sensor = visualization_make.make_edge_set(points=self.sensor_pan["points"],
+                                                                         edges=self.f_edges,
+                                                                         color=self.config["f_edgeset_sensor_color"])
             draw_list += [self.f_edgeset_sensor]
 
 
         if full_image_pcd_list_sensor:
             if self.full_image_pcd_list_sensor is None:
                 self.full_image_pcd_list_sensor = \
-                    make_full_image_pcd_list_sensor(tile_info_dict=self.tile_info_dict,
-                                                    downsample_factor=image_pcd_downsample_factor,
-                                                    color_directory_path=join(self.config["path_data"],
-                                                                              self.config["path_image_dir"]),
-                                                    color_filter=self.config["full_image_pcd_sensor_color_filter"]
-                                                    )
+                    visualization_make.make_full_image_pcd_list_sensor(tile_info_dict=self.tile_info_dict,
+                                                                       downsample_factor=image_pcd_downsample_factor,
+                                                                       color_directory_path=TileInfoDict.join(self.config["path_data"],
+                                                                                                              self.config["path_image_dir"]),
+                                                                       color_filter=self.config["full_image_pcd_sensor_color_filter"]
+                                                                       )
             draw_list += self.full_image_pcd_list_sensor
 
         if full_image_pcd_list_sensor_with_label:
             if self.full_image_pcd_list_sensor_with_label is None:
                 self.full_image_pcd_list_sensor_with_label = \
-                    make_full_image_pcd_list_sensor_with_label(tile_info_dict=self.tile_info_dict,
-                                                               downsample_factor=image_pcd_downsample_factor,
-                                                               color_directory_path=join(self.config["path_data"],
-                                                                                         self.config["path_image_dir"]),
-                                                               color_filter=self.config["full_image_pcd_sensor_color_filter"]
-                                                               )
+                    visualization_make.make_full_image_pcd_list_sensor_with_label(tile_info_dict=self.tile_info_dict,
+                                                                                  downsample_factor=image_pcd_downsample_factor,
+                                                                                  path_data=self.config["path_data"],
+                                                                                  dataset_group_template=self.config["dataset_folder_template"],
+                                                                                  color_directory_path=self.config["path_image_dir"],
+                                                                                  color_filter=self.config["full_image_pcd_sensor_color_filter"]
+                                                                                  )
             draw_list += self.full_image_pcd_list_sensor_with_label
 
         if sensor_edgeset:
             if self.sensor_edgeset is None:
-                self.sensor_edgeset = make_pose_sensor_edge_set(tile_info_dict=self.tile_info_dict,
-                                                                color=self.config["sensor_edgeset_color"])
+                self.sensor_edgeset = visualization_make.make_pose_sensor_edge_set(tile_info_dict=self.tile_info_dict,
+                                                                                   color=self.config["sensor_edgeset_color"])
             draw_list += [self.sensor_edgeset]
 
-        draw_geometries(draw_list)
+        open3d.visualization.draw_geometries(draw_list)

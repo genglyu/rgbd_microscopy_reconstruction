@@ -9,16 +9,16 @@ from TileInfoDict import *
 from scipy.interpolate import griddata
 
 
-def generate_microscope_intrinsic_open3d(width_by_pixel=640, height_by_pixel=480, width_by_m=0.01, height_by_m=0.0075,
-                                         focal_distance_by_m=0.1):
+def generate_microscope_intrinsic_open3d(width_by_pixel=640, height_by_pixel=480, width_by_mm=10, height_by_mm=7.5,
+                                         focal_distance_by_mm=0.1):
     intrinsic = camera.PinholeCameraIntrinsic(camera.PinholeCameraIntrinsicParameters.PrimeSenseDefault)
     intrinsic.width = width_by_pixel
     intrinsic.height = height_by_pixel
 
     cx = (width_by_pixel - 1.0) / 2
     cy = (height_by_pixel - 1.0) / 2
-    fx = focal_distance_by_m * width_by_pixel / width_by_m
-    fy = focal_distance_by_m * height_by_pixel / height_by_m
+    fx = focal_distance_by_mm * width_by_pixel / width_by_mm
+    fy = focal_distance_by_mm * height_by_pixel / height_by_mm
 
     intrinsic.intrinsic_matrix = [[fx, 0, cx],
                                   [0, fy, cy],
@@ -45,12 +45,12 @@ def get_rgbd_camera_trans(tile_trans=numpy.identity(4), focal_distance_by_m=0.1)
 def make_single_depth_image(tile_trans,
                             all_tiles_center_position_list, all_tiles_center_position_kd_tree, searching_range_radius,
                             depth_camera_intrinsic:camera.PinholeCameraIntrinsic,
-                            focal_distance_by_m=0.1,
+                            focal_distance_by_mm=100,
                             depth_scaling_factor=100000,
                             saving_path=None):
     # find the closest ones to the tile needs depth map.
     tile_position = numpy.dot(tile_trans, numpy.array([0, 0, 0, 1]).T).T[0:3]
-    camera_trans = get_rgbd_camera_trans(tile_trans=tile_trans, focal_distance_by_m=focal_distance_by_m)
+    camera_trans = get_rgbd_camera_trans(tile_trans=tile_trans, focal_distance_by_m=focal_distance_by_mm)
 
     [_, idx, _] = all_tiles_center_position_kd_tree.search_radius_vector_3d(tile_position, searching_range_radius)
     reference_points = numpy.ones((len(idx), 4))

@@ -17,9 +17,9 @@ def generate_depth_map_multiprocessing(tile_info_dict, config):
     microcsope_intrinsic = \
         generate_microscope_intrinsic_open3d(width_by_pixel=config["microscope_intrinsic"]["width_by_pixel"],
                                              height_by_pixel=config["microscope_intrinsic"]["height_by_pixel"],
-                                             width_by_m=config["size_by_m"][0],
-                                             height_by_m=config["size_by_m"][1],
-                                             focal_distance_by_m=config["microscope_intrinsic"]["focal_distance"])
+                                             width_by_mm=config["size_by_mm"][0],
+                                             height_by_mm=config["size_by_mm"][1],
+                                             focal_distance_by_mm=config["microscope_intrinsic"]["focal_distance"])
 
     # max_thread = min(multiprocessing.cpu_count(), max(len(tile_info_dict), 1))
     # Parallel(n_jobs=max_thread)(
@@ -41,7 +41,7 @@ def generate_depth_map_multiprocessing(tile_info_dict, config):
                                 all_tiles_center_position_kd_tree=tile_tree,
                                 searching_range_radius=tile_info_dict[tile_info_key].width_by_m * 2,
                                 depth_camera_intrinsic=microcsope_intrinsic,
-                                focal_distance_by_m=config["microscope_intrinsic"]["focal_distance"],
+                                focal_distance_by_mm=config["microscope_intrinsic"]["focal_distance"],
                                 depth_scaling_factor=config["microscope_intrinsic"]["depth_scaling"],
                                 saving_path=join(config["path_data"], config["path_depth_dir"],
                                                  tile_info_dict[tile_info_key].file_name) + ".png")
@@ -58,13 +58,13 @@ def integrate_object(tile_info_dict, config, save_mesh=True):
     microcsope_intrinsic = \
         generate_microscope_intrinsic_open3d(width_by_pixel=config["microscope_intrinsic"]["width_by_pixel"],
                                              height_by_pixel=config["microscope_intrinsic"]["height_by_pixel"],
-                                             width_by_m=config["size_by_m"][0],
-                                             height_by_m=config["size_by_m"][1],
-                                             focal_distance_by_m=config["microscope_intrinsic"]["focal_distance"])
-    print(config["size_by_m"][0] / config["microscope_intrinsic"]["width_by_pixel"] / 2)
+                                             width_by_mm=config["size_by_mm"][0],
+                                             height_by_mm=config["size_by_mm"][1],
+                                             focal_distance_by_mm=config["microscope_intrinsic"]["focal_distance"])
+    print(config["size_by_mm"][0] / config["microscope_intrinsic"]["width_by_pixel"] / 2)
     volume = integration.ScalableTSDFVolume(
-        voxel_length=config["size_by_m"][0] / config["microscope_intrinsic"]["width_by_pixel"] / 2,
-        sdf_trunc= config["size_by_m"][0] / config["microscope_intrinsic"]["width_by_pixel"] * 2,
+        voxel_length=config["size_by_mm"][0] / config["microscope_intrinsic"]["width_by_pixel"] / 2,
+        sdf_trunc= config["size_by_mm"][0] / config["microscope_intrinsic"]["width_by_pixel"] * 2,
         color_type=integration.TSDFVolumeColorType.RGB8)
     for tile_info_key in tile_info_dict:
         print("Integrating tile %6d" % tile_info_key)
