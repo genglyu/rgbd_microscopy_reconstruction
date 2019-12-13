@@ -12,6 +12,8 @@ def bgr_to_luminance(bgr_color):
 
 
 def generate_color_filters(tile_info_dict, trans_data_manager: TransformationData.TransformationDataPool):
+    print("Start generating color filter")
+    print(trans_data_manager.trans_dict)
     edges_count = 0
     for (s, t) in trans_data_manager.trans_dict:
         print("(s, t)")
@@ -61,7 +63,9 @@ def generate_color_filters(tile_info_dict, trans_data_manager: TransformationDat
         return d_funs
 
     # solve_result = scipy.optimize.fsolve(color_equations, numpy.ones(egdes_count * 3))
-    solve_result, _ = scipy.optimize.leastsq(func=color_equations, x0=numpy.ones(len(tile_info_dict)), Dfun=color_equations_dfunction)
+    solve_result, _ = scipy.optimize.leastsq(func=color_equations,
+                                             x0=numpy.ones(len(tile_info_dict)),
+                                             Dfun=color_equations_dfunction)
     color_filters = numpy.asarray(solve_result).reshape((-1))
 
     print("Updating the color_filters to tile_info_dict")

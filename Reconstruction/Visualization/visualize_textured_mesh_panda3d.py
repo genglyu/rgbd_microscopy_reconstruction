@@ -31,7 +31,8 @@ class MicroscopyApp(ShowBase):
 
     def init_camera(self):
         self.disable_mouse()
-        self.camera.setPos(332.233, -430.504, 181.282)
+        # self.camera.setPos(332.233, -430.504, 181.282)
+        self.camera.setPos(295.154714427479, -179.06927339506692, 159.1025333387005)
         self.cam.node().getLens().setFov(30)
         self.camera.setHpr(0, -90, -90)
 

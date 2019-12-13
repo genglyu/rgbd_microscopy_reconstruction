@@ -33,17 +33,17 @@ if __name__ == "__main__":
     print("file_managing.join(config===============================================")
     print(file_managing.join(config["path_data"], config["recaptured_tile_dir"]))
 
-    # capture_virtual_tile.recapture_all_tiles_in_dict(
-    #     tile_info_dict=tile_info_dict_all,
-    #     triangle_info_list=triangle_infos,
-    #     texture_dir=file_managing.join(config["path_data"], config["merged_texture_dir"]),
-    #     width_pixel=config["microscope_intrinsic"]["width_by_pixel"],
-    #     height_pixel=config["microscope_intrinsic"]["height_by_pixel"],
-    #     tile_width=config["size_by_mm"][0],
-    #     camera_focal_distance_by_mm=config["microscope_intrinsic"]["focal_distance_by_mm"],
-    #     recaptured_tile_dir=file_managing.join(config["path_data"], config["recaptured_tile_dir"]),
-    #     recaptured_tile_template=config["recaptured_tile_template"]
-    # )
+    capture_virtual_tile.recapture_all_tiles_in_dict(
+        tile_info_dict=tile_info_dict_all,
+        triangle_info_list=triangle_infos,
+        texture_dir=file_managing.join(config["path_data"], config["merged_texture_dir"]),
+        width_pixel=config["microscope_intrinsic"]["width_by_pixel"],
+        height_pixel=config["microscope_intrinsic"]["height_by_pixel"],
+        tile_width=config["size_by_mm"][0],
+        camera_focal_distance_by_mm=config["microscope_intrinsic"]["focal_distance_by_mm"],
+        recaptured_tile_dir=file_managing.join(config["path_data"], config["recaptured_tile_dir"]),
+        recaptured_tile_template=config["recaptured_tile_template"]
+    )
 
     similarity_evalutation.evaluate_similarity(tile_info_dict=tile_info_dict_all,
                                                path_data=config["path_data"],

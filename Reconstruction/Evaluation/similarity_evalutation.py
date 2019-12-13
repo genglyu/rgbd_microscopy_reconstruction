@@ -5,18 +5,18 @@ import visualize_textured_mesh_panda3d
 import cv2
 import pandas
 import matplotlib.pyplot as plt
+import json
 
 
-def draw_histogram(data_list):
-    commutes = pandas.Series(data_list)
-    commutes.plot.hist(grid=True,
-                       # bins=20, rwidth=0.9,
-                       color='#607c8e')
-    plt.title('Commute Times for 1,000 Commuters')
-    plt.xlabel('Counts')
-    plt.ylabel('Commute Time')
-    plt.grid(axis='y', alpha=0.75)
-
+# def draw_histogram(data_list):
+#     commutes = pandas.Series(data_list)
+#     commutes.plot.hist(grid=True,
+#                        # bins=20, rwidth=0.9,
+#                        color='#607c8e')
+#     plt.title('Commute Times for 1,000 Commuters')
+#     plt.xlabel('Counts')
+#     plt.ylabel('Commute Time')
+#     plt.grid(axis='y', alpha=0.75)
 
 
 def evaluate_similarity(tile_info_dict,
@@ -24,7 +24,8 @@ def evaluate_similarity(tile_info_dict,
                         dataset_folder_template="Dataset_%02d/",
                         path_image_dir="color/",
                         recaptured_tile_dir="captured/",
-                        recaptured_tile_template="tile_%06d.png"):
+                        recaptured_tile_template="tile_%06d.png",
+                        evaluation_result_file_name="SIFT_matching_confidence.json"):
     sift_finder = cv2.xfeatures2d.SIFT_create(nfeatures=500,
                                               nOctaveLayers=3,
                                               contrastThreshold=0.001,
@@ -53,4 +54,7 @@ def evaluate_similarity(tile_info_dict,
         print("Tile %d confidence: %f" % (tile_info_key, match_conf))
         matching_confidence_list.append(match_conf)
     print(matching_confidence_list)
-    draw_histogram(matching_confidence_list)
+    json.dump(obj=matching_confidence_list,
+              fp=open(file_managing.join(path_data, evaluation_result_file_name), "w"), indent=4)
+    # draw_histogram(matching_confidence_list)
+    return matching_confidence_list

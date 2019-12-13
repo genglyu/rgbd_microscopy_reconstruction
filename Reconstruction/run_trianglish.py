@@ -1,41 +1,61 @@
-import open3d
-
-# path = "/home/lvgeng/writing/microscope_project/fruit/fragments/tile_group_00.ply"
-# mesh_path = "/home/lvgeng/writing/microscope_project/fruit/fragments/tile_group_00_mesh.ply"
-# pcd = open3d.io.read_point_cloud(filename=path, remove_nan_points=True, remove_infinite_points=True, print_progress=True)
-#
-# open3d.visualization.draw_geometries([pcd])
-#
-# mesh = open3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(
-#     pcd=pcd,
-#     radii=open3d.utility.DoubleVector([3]))
-#
-# open3d.visualization.draw_geometries([mesh])
-#
-# open3d.io.write_triangle_mesh(filename=mesh_path, mesh=mesh, write_ascii=True, compressed=False,
-#                               write_vertex_normals=True,
-#                               write_vertex_colors=True,
-#                               write_triangle_uvs=True,
-#                               print_progress=True)
-
-import TileInfoDict
 import color_coded_triangle_mesh
 import open3d
 
+import os
+import json
+import argparse
 
-dict_path = "/home/lvgeng/writing/microscope_project/fruit/tile_info_dict.json"
-mesh_path = "/home/lvgeng/writing/microscope_project/fruit/tile_all_mesh.ply"
+from file_managing import *
+import TileInfoDict
+import VisualizerOpen3d
 
-tile_info_dict = TileInfoDict.read_tile_info_dict(dict_path)
 
-pcd, mesh = color_coded_triangle_mesh.generate_vertex_triangle_mesh_from_tile_info_dict(tile_info_dict, [5])
+# Visualize ==================================================================================
+if __name__ == "__main__":
+    # set_verbosity_level(verbosity_level=VerbosityLevel.Debug)
+    parser = argparse.ArgumentParser(description="Curved surface microscopy level reconstruction")
+    parser.add_argument("config", help="path to the config file")
+    # Update tile_info_dict_all ===============================================================
+    args = parser.parse_args()
+    if args.config is not None:
+        with open(args.config) as json_file:
+            config = json.load(json_file)
+        config["path_data"] = os.path.dirname(args.config)
+    assert config is not None
 
-open3d.io.write_triangle_mesh(filename=mesh_path, mesh=mesh, write_ascii=True, compressed=False,
-                              write_vertex_normals=True,
-                              write_vertex_colors=True,
-                              write_triangle_uvs=True,
-                              print_progress=True)
+    # Prepare tile info dict. Individual groups and the entire dict. ============================================
+    tile_info_dict_all = TileInfoDict.read_tile_info_dict(join(config["path_data"], config["tile_info_dict_name"]))
+    # viewer = VisualizerOpen3d.MicroscopyReconstructionVisualizerOpen3d(tile_info_dict_all, config)
+    # viewer.visualize_config()
+    pcd, mesh = color_coded_triangle_mesh.generate_vertex_triangle_mesh_from_tile_info_dict(
+        tile_info_dict=tile_info_dict_all,
+        radii_list=[config["size_by_mm"][1] / 2,
+                    config["potential_neighbour_searching_range"]/2,
+                    config["potential_neighbour_searching_range"]])
 
-open3d.visualization.draw_geometries([mesh])
+    open3d.io.write_triangle_mesh(filename=join(config["path_data"], config["color_coded_triangle_mesh"]),
+                                  mesh=mesh, write_ascii=True, compressed=False,
+                                  write_vertex_normals=True,
+                                  write_vertex_colors=True,
+                                  write_triangle_uvs=True,
+                                  print_progress=True)
+    # open3d.visualization.draw_geometries([mesh])
+    triangle_infos = color_coded_triangle_mesh.process_color_coded_ply(
+        ply_path=join(config["path_data"], config["color_coded_triangle_mesh"]),
+        tile_info_dict=tile_info_dict_all,
+        path_data=config["path_data"],
+        dataset_folder_template=config["dataset_folder_template"],
+        path_image_dir=config["path_image_dir"],
+        merged_texture_dir=config["merged_texture_dir"],
+        merged_texture_file_name_template=config["merged_texture_file_name_template"]
+    )
+
+    color_coded_triangle_mesh.save_triangle_info_list(triangle_info_list=triangle_infos,
+                                                      save_path=join(config["path_data"],
+                                                                     config["textured_triangle_mesh_data"]))
+
+
+
+
 
 

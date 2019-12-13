@@ -52,7 +52,9 @@ def process_color_coded_ply(ply_path, tile_info_dict,
                             dataset_folder_template="Dataset_%02d",
                             path_image_dir="color/",
                             merged_texture_dir="textures/",
-                            merged_texture_file_name_template="tex_%07d.png"):
+                            merged_texture_file_name_template="tex_%07d.png",
+                            crop_w=0,
+                            crop_h=0):
     triangle_infos = []
     ply_data = plyfile.PlyData.read(ply_path)
 
@@ -88,8 +90,13 @@ def process_color_coded_ply(ply_path, tile_info_dict,
                 # generating texture
                 image_path = file_managing.join(path_data, dataset_folder_template % group_id,
                                                 path_image_dir, tile_info.file_name) + ".png"
-
                 image = (cv2.imread(image_path) * numpy.flip(tile_info.color_and_illumination_correction, 0)).astype(numpy.uint8)
+
+                # # Crop the image and leave the central area only.
+                # # The texture should be fine if no extra triangles are generated.
+                # h, w, c = image.shape
+                # image = image[crop_h:h - crop_h, crop_w:w - crop_w]
+
                 vertex_texture_list.append(image)
 
             print("Processing triangle %d. The tiles involved are (%d, %d, %d)" % (triangle_id,

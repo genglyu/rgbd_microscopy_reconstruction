@@ -109,6 +109,7 @@ if __name__ == "__main__":
     assert config is not None
 
     dataset_group_ids = config["group_folder_ids"]
+    print(dataset_group_ids)
 
     tile_info_dict_all = {}
     tile_info_dict_groups = {}
@@ -125,7 +126,8 @@ if __name__ == "__main__":
     # Prepare tile info dict. Individual groups and the entire dict. ============================================
     if args.dict_make:
         for group_id in dataset_group_ids:
-            # group_id = int(group_id)
+            group_id = int(group_id)
+            print("Generate group_tile_dict %02d" % group_id)
             tile_info_dict_single_group = TileInfoDict.make_info_dict_for_group(group_id=group_id, config=config)
             # Generate potential neighbours in each group.
             TileInfoDict.update_potential_neighbour_list_in_group(
@@ -173,6 +175,7 @@ if __name__ == "__main__":
     if args.register_in_group:
         import image_registration
         for group_id in tile_info_dict_groups:
+            print("Processing group %02d" % group_id)
             tile_info_dict_single_group = tile_info_dict_groups[group_id]
             trans_data_manager_single_group = \
                 TransformationData.TransformationDataPool(tile_info_dict=tile_info_dict_single_group,
@@ -215,6 +218,7 @@ if __name__ == "__main__":
 
         # ===============================================================================
         # Saving the tile_info_dict_all. The neighbour list might change in this progress
+        print(tile_info_dict_groups)
         for group_id in dataset_group_ids:
             tile_info_dict_all.update(tile_info_dict_groups[group_id])
         TileInfoDict.save_tile_info_dict(join(config["path_data"],
@@ -351,13 +355,27 @@ if __name__ == "__main__":
     # Color correction ==================================================================================
     if args.color_correction:
         import global_color_correction_luminance
-        tile_info_dict = global_color_correction_luminance.generate_color_filters(
+        dict_all_path = join(config["path_data"], config["tile_info_dict_name"])
+        if os.path.isfile(dict_all_path):
+            tile_info_dict_all = TileInfoDict.read_tile_info_dict(dict_all_path)
+        else:
+            print("No tile_info_dict_all available at default path")
+            sys.exit()
+
+        trans_data_manager_all = TransformationData.TransformationDataPool(tile_info_dict=tile_info_dict_all,
+                                                                           config=config)
+        try:
+            trans_data_manager_all.read(join(config["path_data"],
+                                             config["local_transformation_data_pool_name"]))
+        except:
+            for group_id in tile_info_dict_groups:
+                trans_data_manager_all.update_from_other_trans_data_pool(trans_data_manager_groups[group_id])
+            trans_data_manager_all.save(join(config["path_data"],
+                                             config["local_transformation_data_pool_name"]))
+        # generate_color_filter ========================================================================
+        tile_info_dict_all = global_color_correction_luminance.generate_color_filters(
             tile_info_dict=tile_info_dict_all,
             trans_data_manager=trans_data_manager_all)
         TileInfoDict.save_tile_info_dict(join(config["path_data"], config["tile_info_dict_name"]),
-                                         tile_info_dict)
+                                         tile_info_dict_all)
 
-    # Visualize ==================================================================================
-    if args.visualization:
-        viewer = VisualizerOpen3d.MicroscopyReconstructionVisualizerOpen3d(tile_info_dict, config)
-        viewer.visualize_config()

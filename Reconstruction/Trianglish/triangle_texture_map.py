@@ -6,7 +6,8 @@ import math
 #     return images[0], [[0.5, 0.5], [0.5, 0.5], [0.5, 0.5]]
 
 
-def merge_triangle_texture(images, blend_strength=5):
+def merge_triangle_texture(images,
+                           blend_strength=5):
     seam_work_aspect = 1
     image_sizes = []
     features = []

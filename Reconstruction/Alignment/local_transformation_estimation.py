@@ -57,7 +57,7 @@ def planar_transformation_cv(s_img, t_img, crop_w=0, crop_h=0,
     match_conf = matching_result.confidence
 
     if match_conf != 0.0:
-        trans_cv = numpy.asarray(matching_result.H)
+        trans_cv_cropped = numpy.asarray(matching_result.H)
 
         trans_deoffset = numpy.asarray([[1.0, 0, crop_w],
                                         [0, 1.0, crop_h],
@@ -65,24 +65,35 @@ def planar_transformation_cv(s_img, t_img, crop_w=0, crop_h=0,
         trans_offset = numpy.asarray([[1.0, 0, -crop_w],
                                       [0, 1.0, -crop_h],
                                       [0, 0, 1]])
-        trans_cv = numpy.dot(trans_deoffset, numpy.dot(trans_cv, trans_offset))
+        trans_cv = numpy.dot(trans_deoffset, numpy.dot(trans_cv_cropped, trans_offset))
         # get the mean of the overlapping area   ============================================================
         img_s_warped = cv2.warpAffine(src=s_img, M=trans_cv[0:2, :], dsize=(t_w, t_h))
-
         img_s_gray = cv2.cvtColor(img_s_warped, cv2.COLOR_BGR2GRAY)
         ret, img_s_mask_one_channel = cv2.threshold(img_s_gray, 0, 1, cv2.THRESH_BINARY)
         mask_extended = img_s_mask_one_channel.reshape((-1)).T
-
         pixel_count_overlapping = len(mask_extended[mask_extended[:] > 0])
-
         mask_three_channel = numpy.c_[mask_extended,
                                       mask_extended,
                                       mask_extended].reshape((t_h, t_w, 3))
-
         masked_img_t = mask_three_channel * t_img
-
         mean_s = numpy.sum(img_s_warped.reshape((-1, 3)), axis=0) / pixel_count_overlapping
         mean_t = numpy.sum(masked_img_t.reshape((-1, 3)), axis=0) / pixel_count_overlapping
+
+        # # get the mean of the overlapping area cropped version   ==============================================
+        # img_s_cropped_warped = cv2.warpAffine(src=s_img_crop,
+        #                                       M=trans_cv_cropped[0:2, :],
+        #                                       dsize=(t_w-2*crop_w, t_h-2*crop_h))
+        # img_s_cropped_gray = cv2.cvtColor(s_img_crop, cv2.COLOR_BGR2GRAY)
+        # ret, img_s_cropped_mask_one_channel = cv2.threshold(img_s_cropped_gray, 0, 1, cv2.THRESH_BINARY)
+        # mask_cropped_extended = img_s_cropped_mask_one_channel.reshape((-1)).T
+        # pixel_count_overlapping = len(mask_cropped_extended[mask_cropped_extended[:] > 0])
+        # mask_three_channel = numpy.c_[mask_cropped_extended,
+        #                               mask_cropped_extended,
+        #                               mask_cropped_extended].reshape((t_h-2*crop_h, t_w-2*crop_w, 3))
+        # masked_img_cropped_t = mask_three_channel * t_img_crop
+        # mean_s = numpy.sum(img_s_cropped_warped.reshape((-1, 3)), axis=0) / pixel_count_overlapping
+        # mean_t = numpy.sum(masked_img_cropped_t.reshape((-1, 3)), axis=0) / pixel_count_overlapping
+        # =====================================================================================================
 
     else:
         trans_cv = numpy.identity(4)
